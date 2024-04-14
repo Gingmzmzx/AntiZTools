@@ -1,9 +1,11 @@
 import path, os, json
 
+path.makeSurePathExists("")
+
 if not os.path.exists(path.path("config.json")):
     with open(path.path("config.json"), "w+") as f:
         f.write(json.dumps({
-            "TUNAutoStart": True,
+            "TUNAutoStart": False,
             "StartShow": False,
             "AntiZB": True,
             "ZBMsg": [

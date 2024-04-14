@@ -3,3 +3,5 @@ HackToolsDist/
 __pycache__
 config.json
 test.py
+build/
+dist/

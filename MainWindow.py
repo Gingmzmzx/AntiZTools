@@ -34,7 +34,7 @@ class ZBDialog(QDialog, Ui_ZBDialog):
     def __init__(self, labelText, parent=None):
         super(ZBDialog, self).__init__(parent)
         self.setupUi(self)
-        self.label.setText(random.choice(labelText))
+        self.label.setText(labelText)
 
         r = random.randint(0, 255)
         g = random.randint(0, 255)
@@ -58,6 +58,7 @@ class PasswordDialog(QDialog, Ui_PasswordDialog):
         self.label_2.setVisible(False)
         self.passwordInput.setEchoMode(Qt.QLineEdit.Password)
         self.confirmBtn.clicked.connect(self.check)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
     
     def check(self):
         if self.passwordInput.text() == self.config.get("password", "ZBZ666"):
@@ -113,6 +114,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.clearLogsBtn.clicked.connect(self.clearLogs)
         self.titleBtn.clicked.connect(self.runGWThread)
         self.enableAutoStart.clicked.connect(self.setAutoStart)
+        self.AutoStartTipLabel.setText(path.path(self.config.get("EXEFileName", "HackTools.exe")))
         self.TUNAutoStartCheckbox.stateChanged.connect(self.switchAutoStartStatus)
 
         if self.config.get("TUNAutoStart", True):
@@ -143,6 +145,10 @@ class MyMainWindow(QWidget, Ui_Form):
         autoStarter = reg.AutoStarter(path.path(self.config.get("EXEFileName", "HackTools.exe")), self.config.get("RegAppName", "AntiZTools"))
         if not autoStarter.is_auto_start():
             autoStarter.set_auto_start()
+        if autoStarter.is_auto_start():
+            self.AutoStartLabel.setText("已启用")
+            self.AutoStartLabel.setStyleSheet("color: green")
+            self.enableAutoStart.setDisabled(True)
     
     def openTestDialog(self):
         TestDialog().exec_()
@@ -258,7 +264,7 @@ class GetWindowThread(QThread):
                         self.times += 1
                         print("Matched", self.times)
                         if self.times <= i.get("times", 10):
-                            self.trigger.emit(random.choice(i.get("msg")))
+                            self.trigger.emit(random.choice(i.get("msg", ["检测到有人在装逼，我不说是谁", "装逼遭雷劈"])))
                         else:
                             self.exitFlag = True
                         break

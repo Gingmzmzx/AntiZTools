@@ -22,7 +22,7 @@ if not os.path.exists(path.path("config.json")):
                     "times": 10
                 }
             ],
-            "EXEFileName": "HackTools.exe",
+            "EXEFileName": "AntiZTools.exe",
             "RegAppName": "AntiZTools",
             "password": "ZBZ666"
         }))

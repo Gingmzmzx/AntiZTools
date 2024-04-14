@@ -126,7 +126,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "HackTools"))
+        Form.setWindowTitle(_translate("Form", "AntiZTools"))
         self.runBox.setTitle(_translate("Form", "网络相关"))
         self.EnableTUN.setText(_translate("Form", "启用TUN"))
         self.TUNStatusLabel.setText(_translate("Form", "TUN状态"))

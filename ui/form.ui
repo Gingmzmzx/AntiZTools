@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>HackTools</string>
+   <string>AntiZTools</string>
   </property>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">

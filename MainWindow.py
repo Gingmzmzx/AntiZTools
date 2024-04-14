@@ -116,7 +116,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.clearLogsBtn.clicked.connect(self.clearLogs)
         self.titleBtn.clicked.connect(self.runGWThread)
         self.enableAutoStart.clicked.connect(self.setAutoStart)
-        self.AutoStartTipLabel.setText(path.cwdPath(self.config.get("EXEFileName", "HackTools.exe")))
+        self.AutoStartTipLabel.setText(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")))
         self.TUNAutoStartCheckbox.stateChanged.connect(self.switchAutoStartStatus)
 
         if self.config.get("TUNAutoStart", True):
@@ -144,7 +144,7 @@ class MyMainWindow(QWidget, Ui_Form):
             self.getWindowThread.start()
 
     def setAutoStart(self):
-        autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "HackTools.exe")), self.config.get("RegAppName", "AntiZTools"))
+        autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
         if not autoStarter.is_auto_start():
             autoStarter.set_auto_start()
         if autoStarter.is_auto_start():
@@ -218,7 +218,7 @@ class GetTUNStatusThread(QThread):
         self.wait()
 
     def run(self):
-        autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "HackTools.exe")), self.config.get("RegAppName", "AntiZTools"))
+        autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
         if autoStarter.is_auto_start():
             myWin.widget_2_sub.AutoStartLabel.setText("已启用")
             myWin.widget_2_sub.AutoStartLabel.setStyleSheet("color: green")

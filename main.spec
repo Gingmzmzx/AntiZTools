@@ -6,7 +6,7 @@ block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=[r'F:\HackTools'],
+    pathex=[r'F:\AntiZTools'],
     binaries=[],
     datas=[('./icon.jpg', './TUNBlock/')],
     hookspath=[],
@@ -27,7 +27,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='HackTools',
+    name='AntiZTools',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -40,5 +40,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=r"F:\HackTools\icon.jpg"
+    icon=r"F:\AntiZTools\icon.jpg"
 )

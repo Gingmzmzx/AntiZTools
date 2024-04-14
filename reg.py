@@ -28,8 +28,3 @@ class AutoStarter():
                 return True
         except OSError as e:
             return False
-
-if __name__ == "__main__":
-    import path
-    print(AutoStarter(path.path(__file__), "HackTools").is_auto_start())
-    AutoStarter(path.path(__file__), "HackTools").set_auto_start()

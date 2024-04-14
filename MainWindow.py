@@ -1,13 +1,14 @@
-import requests, traceback, sys, path, subprocess, random, time, json, psutil, platform, reg, os
+import requests, traceback, sys, path, subprocess, random, time, json, psutil, platform, reg
 from PyQt5 import QtCore
 from PyQt5 import Qt
-from PyQt5.QtGui import QIcon, QColor
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog, QLabel, QSizePolicy
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog
 from PyQt5.QtCore import QThread, pyqtSignal
 from ui.Ui_form import Ui_Form
 from ui.titleWindow import TitleWindow
 from ui.Ui_ZBDialog import Ui_ZBDialog
 from ui.Ui_TestDialog import Ui_TestDialog
+from ui.Ui_password import Ui_PasswordDialog
 import pygetwindow as gw
 
 def checkTUN():
@@ -41,11 +42,29 @@ class ZBDialog(QDialog, Ui_ZBDialog):
         self.label.setStyleSheet(f"QLabel {{ color: rgb({r}, {g}, {b}) }}")
 
         self.adjustSize()
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 
 class TestDialog(QDialog, Ui_TestDialog):
     def __init__(self, parent=None):
         super(TestDialog, self).__init__(parent)
         self.setupUi(self)
+
+class PasswordDialog(QDialog, Ui_PasswordDialog):
+    def __init__(self, config, func, parent=None):
+        super(PasswordDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.config = config
+        self.func = func
+        self.label_2.setVisible(False)
+        self.passwordInput.setEchoMode(Qt.QLineEdit.Password)
+        self.confirmBtn.clicked.connect(self.check)
+    
+    def check(self):
+        if self.passwordInput.text() == self.config.get("password", "ZBZ666"):
+            self.func()
+            self.close()
+        else:
+            self.label_2.setVisible(True)
 
 class MyMainWindow(QWidget, Ui_Form):
     _TUNCmd = r"{} -f {}".format(path.path(r".\TUNBlock\clash-{}.exe"), path.path(r".\TUNBlock\config.yml"))
@@ -60,19 +79,16 @@ class MyMainWindow(QWidget, Ui_Form):
     def _initTray(self):
         self.openAction = QAction("打开主界面", self)
         self.exitAction = QAction("退出程序", self)
-        self.aboutAction = QAction("关于", self)
         self.trayIconMenu = QMenu(self)
         self.trayIconMenu.addAction(self.openAction)
-        self.trayIconMenu.addAction(self.exitAction)
         self.trayIconMenu.addSeparator()
-        self.trayIconMenu.addAction(self.aboutAction)
-        self.openAction.triggered.connect(myWin.show)
-        self.exitAction.triggered.connect(app.quit)
-        self.aboutAction.triggered.connect(self.about)
+        self.trayIconMenu.addAction(self.exitAction)
+        self.openAction.triggered.connect(self.openPwdDialog(myWin.show))
+        self.exitAction.triggered.connect(self.openPwdDialog(app.quit))
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
         self.trayIcon.setIcon(QIcon(path.path("icon.jpg")))
-        self.trayIcon.setToolTip("HackTools")
+        self.trayIcon.setToolTip("AntiZTools")
         self.trayIcon.show()
     
     def init(self):
@@ -97,7 +113,6 @@ class MyMainWindow(QWidget, Ui_Form):
         self.clearLogsBtn.clicked.connect(self.clearLogs)
         self.titleBtn.clicked.connect(self.runGWThread)
         self.enableAutoStart.clicked.connect(self.setAutoStart)
-        self.AutoStartTipLabel.setText(path.path(self.config.get("EXEFileName", "HackTools.exe")))
         self.TUNAutoStartCheckbox.stateChanged.connect(self.switchAutoStartStatus)
 
         if self.config.get("TUNAutoStart", True):
@@ -113,22 +128,27 @@ class MyMainWindow(QWidget, Ui_Form):
         if self.config.get("StartShow", False):
             myWin.show()
     
+    def openPwdDialog(self, func):
+        def _openPwdDialog():
+            PasswordDialog(self.config, func).exec_()
+        return _openPwdDialog
+
     def runGWThread(self):
-        if self.config.get("ZBMsg", True):
-            self.getWindowThread = GetWindowThread(self.config)
+        if self.config.get("AntiZB", True):
+            self.getWindowThread = GetWindowThread(self.config.get("ZBMsg", []))
             self.getWindowThread.trigger.connect(self.openZBDialog)
             self.getWindowThread.start()
 
     def setAutoStart(self):
-        autoStarter = reg.AutoStarter(path.path(self.config.get("EXEFileName", "HackTools.exe")), "HackTools")
+        autoStarter = reg.AutoStarter(path.path(self.config.get("EXEFileName", "HackTools.exe")), self.config.get("RegAppName", "AntiZTools"))
         if not autoStarter.is_auto_start():
             autoStarter.set_auto_start()
     
     def openTestDialog(self):
         TestDialog().exec_()
     
-    def openZBDialog(self):
-        zbDialog = ZBDialog(self.config.get("ZBMsgText", ["检测到有人在装逼，我不说是谁", "装逼遭雷劈"]))
+    def openZBDialog(self, msg):
+        zbDialog = ZBDialog(msg)
         zbDialog.label.adjustSize()
         zbDialog.exec_()
     
@@ -162,7 +182,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.crashThread.start()
 
     def about(self):
-        QMessageBox.information(self, "About", "关于HackTools。\n由xzy编写。")
+        QMessageBox.information(self, "About", "关于AntiZTools。\n由xzy编写。")
 
 class AutoStartThread(QThread):
     def __init__(self):
@@ -193,7 +213,7 @@ class GetTUNStatusThread(QThread):
         self.wait()
 
     def run(self):
-        autoStarter = reg.AutoStarter(path.path(self.config.get("EXEFileName", "HackTools.exe")), "HackTools")
+        autoStarter = reg.AutoStarter(path.path(self.config.get("EXEFileName", "HackTools.exe")), self.config.get("RegAppName", "AntiZTools"))
         if autoStarter.is_auto_start():
             myWin.widget_2_sub.AutoStartLabel.setText("已启用")
             myWin.widget_2_sub.AutoStartLabel.setStyleSheet("color: green")
@@ -216,7 +236,9 @@ class GetTUNStatusThread(QThread):
 
 class GetWindowThread(QThread):
     flag = False
-    trigger = pyqtSignal()
+    exitFlag = False
+    trigger = pyqtSignal(str)
+    times = 0
 
     def __init__(self, config):
         super(GetWindowThread, self).__init__()
@@ -230,10 +252,20 @@ class GetWindowThread(QThread):
             try:
                 title = gw.getActiveWindowTitle()
                 print("Active Window Title:", title)
-                if title == "服务" or (self.config.get("ZBFuzzyMatching", False) and "服务" in title):
-                    self.flag = True
-                    self.trigger.emit()
-                elif self.flag and "ZBMsgDialog" not in title:
+                for i in self.config:
+                    if (i.get("title") == title) or (i.get("fuzzyMatching") and i.get("title") in title):
+                        self.flag = True
+                        self.times += 1
+                        print("Matched", self.times)
+                        if self.times <= i.get("times", 10):
+                            self.trigger.emit(random.choice(i.get("msg")))
+                        else:
+                            self.exitFlag = True
+                        break
+                else:
+                    if self.flag and "ZBMsgDialog" not in title:
+                        break
+                if self.exitFlag:
                     break
             except Exception as e:
                 print(e)
@@ -276,14 +308,14 @@ class CrashThread(QThread):
     def stop(self):
         self.flag = True
 
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QApplication(sys.argv)
 # setup stylesheet
 # apply_stylesheet(app, theme='dark_teal.xml')
 QApplication.setQuitOnLastWindowClosed(False)
-QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-myWin = TitleWindow(widget_2_sub=MyMainWindow(),icon_path=path.path("icon.jpg"),title='HackTools | Made for Class 6.')
+myWin = TitleWindow(widget_2_sub=MyMainWindow(),icon_path=path.path("icon.jpg"),title='AntiZTools | Made for Class 6.')
 myWin.setWindowIcon(QIcon("./icon.jpg"))
-myWin.setWindowTitle("HackTools | Made for Class 6.")
+myWin.setWindowTitle("AntiZTools | Made for Class 6.")
 myWin.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint|QtCore.Qt.FramelessWindowHint)
 
 def run():

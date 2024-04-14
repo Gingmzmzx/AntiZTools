@@ -6,7 +6,7 @@ block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=[r'E:\HackTools'],
+    pathex=[r'F:\HackTools'],
     binaries=[],
     datas=[('./icon.jpg', './TUNBlock/')],
     hookspath=[],
@@ -40,5 +40,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=r"E:\HackTools\icon.jpg"
+    icon=r"F:\HackTools\icon.jpg"
 )

@@ -19,7 +19,7 @@
      <x>30</x>
      <y>20</y>
      <width>340</width>
-     <height>40</height>
+     <height>100</height>
     </rect>
    </property>
    <property name="sizePolicy">

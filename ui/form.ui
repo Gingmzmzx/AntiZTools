@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>375</width>
+    <height>319</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>微软雅黑</family>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>HackTools</string>
+  </property>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>376</width>
+     <height>320</height>
+    </rect>
+   </property>
+   <property name="acceptDrops">
+    <bool>false</bool>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="tabPosition">
+    <enum>QTabWidget::North</enum>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <property name="tabsClosable">
+    <bool>false</bool>
+   </property>
+   <property name="tabBarAutoHide">
+    <bool>false</bool>
+   </property>
+   <widget class="QWidget" name="tab_run">
+    <attribute name="title">
+     <string>面板</string>
+    </attribute>
+    <widget class="QGroupBox" name="runBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>351</width>
+       <height>90</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>网络相关</string>
+     </property>
+     <widget class="QPushButton" name="EnableTUN">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>30</y>
+        <width>71</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>启用TUN</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="TUNStatusLabel">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>54</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TUN状态</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="TUNStatus">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>30</y>
+        <width>54</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>获取中...</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="DisableTUN">
+      <property name="geometry">
+       <rect>
+        <x>240</x>
+        <y>30</y>
+        <width>71</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>禁用TUN</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="TUNAutoStartCheckbox">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>301</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>开机自动检测网络状态并适时启用TUN</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="testBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>210</y>
+       <width>350</width>
+       <height>70</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>测试</string>
+     </property>
+     <widget class="QPushButton" name="openTestDialogButton">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>90</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>打开测试窗口</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="titleBtn">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>30</y>
+        <width>100</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>检测窗口标题</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="AutoStartBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>110</y>
+       <width>350</width>
+       <height>90</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>开机自启</string>
+     </property>
+     <widget class="QPushButton" name="enableAutoStart">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>30</y>
+        <width>101</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>启用开机自启</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="AutoStart">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>54</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>开机自启</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="AutoStartLabel">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>30</y>
+        <width>54</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>获取中...</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="AutoStartTipLabel">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>310</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>请提前在配置文件中修改exe路径</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_log">
+    <attribute name="title">
+     <string>日志</string>
+    </attribute>
+    <widget class="QTextBrowser" name="logTextarea">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>351</width>
+       <height>190</height>
+      </rect>
+     </property>
+     <property name="placeholderText">
+      <string>暂无...</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="clearLogsBtn">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>200</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>清空日志</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_about">
+    <attribute name="title">
+     <string>关于</string>
+    </attribute>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

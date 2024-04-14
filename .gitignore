@@ -1,0 +1,5 @@
+HackToolsDist/
+.vscode/
+__pycache__
+config.json
+test.py

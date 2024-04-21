@@ -28,3 +28,9 @@ class AutoStarter():
                 return True
         except OSError as e:
             return False
+
+if __name__ == "__main__":
+    autostarter = AutoStarter(r"D:\AntiZTools.exe", "AntiZTools")
+    if not autostarter.is_auto_start():
+        print(autostarter.set_auto_start())
+    print(autostarter.is_auto_start())

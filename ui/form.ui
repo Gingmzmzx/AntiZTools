@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>375</width>
-    <height>319</height>
+    <height>351</height>
    </rect>
   </property>
   <property name="font">
@@ -24,7 +24,7 @@
      <x>0</x>
      <y>0</y>
      <width>376</width>
-     <height>320</height>
+     <height>350</height>
     </rect>
    </property>
    <property name="acceptDrops">
@@ -136,17 +136,17 @@
        <x>10</x>
        <y>210</y>
        <width>350</width>
-       <height>70</height>
+       <height>100</height>
       </rect>
      </property>
      <property name="title">
-      <string>测试</string>
+      <string>窗口标题</string>
      </property>
      <widget class="QPushButton" name="openTestDialogButton">
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>30</y>
+        <y>60</y>
         <width>90</width>
         <height>23</height>
        </rect>
@@ -158,14 +158,56 @@
      <widget class="QPushButton" name="titleBtn">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>160</x>
         <y>30</y>
-        <width>100</width>
+        <width>70</width>
         <height>23</height>
        </rect>
       </property>
       <property name="text">
-       <string>检测窗口标题</string>
+       <string>开始线程</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>70</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>getGW状态</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="getgwstatus">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>30</y>
+        <width>54</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color:red</string>
+      </property>
+      <property name="text">
+       <string>未运行</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="stopGetGWThread">
+      <property name="geometry">
+       <rect>
+        <x>240</x>
+        <y>30</y>
+        <width>70</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>停止线程</string>
       </property>
      </widget>
     </widget>

@@ -10,10 +10,11 @@ from ui.Ui_ZBDialog import Ui_ZBDialog
 from ui.Ui_TestDialog import Ui_TestDialog
 from ui.Ui_password import Ui_PasswordDialog
 import pygetwindow as gw
+from qt_material import apply_stylesheet
 
-def checkTUN():
+def checkTUN(url="https://example.com"):
     try:
-        response = requests.get("https://example.com", timeout=5)
+        response = requests.get(url, timeout=5)
         response.raise_for_status()  # 如果响应状态码不是200，将抛出HTTPError异常
         return False
     except Exception as e:
@@ -39,7 +40,7 @@ class ZBDialog(QDialog, Ui_ZBDialog):
         r = random.randint(0, 255)
         g = random.randint(0, 255)
         b = random.randint(0, 255)
-        self.label.setStyleSheet(f"QLabel {{ color: rgb({r}, {g}, {b}) }}")
+        self.label.setStyleSheet(f"color: rgb({r}, {g}, {b})")
 
         self.adjustSize()
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
@@ -71,6 +72,7 @@ class PasswordDialog(QDialog, Ui_PasswordDialog):
 
 class MyMainWindow(QWidget, Ui_Form):
     _TUNCmd = r"{} -f {}".format(path.path(r".\TUNBlock\clash-{}.exe"), path.path(r".\TUNBlock\config.yml"))
+    getGWThreadStatus = False
 
     def __init__(self,parent =None):
         super(MyMainWindow,self).__init__(parent)
@@ -91,7 +93,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
         self.trayIcon.setIcon(QIcon(path.path("icon.jpg")))
-        self.trayIcon.setToolTip("AntiZTools")
+        self.trayIcon.setToolTip("GeoGebra")
         self.trayIcon.show()
     
     def init(self):
@@ -102,7 +104,7 @@ class MyMainWindow(QWidget, Ui_Form):
             QMessageBox.warning(self, "发生错误", "运行发生错误，请将下列错误信息提交给开发者：\n{}".format(str(e)))
 
     def _init(self):
-        with open(path.path("config.json"), "r") as f:
+        with open(path.path("config.json"), "r", encoding="utf-8") as f:
             self.config = json.loads(f.read())
 
         self._initTray()
@@ -115,6 +117,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.openTestDialogButton.clicked.connect(self.openTestDialog)
         self.clearLogsBtn.clicked.connect(self.clearLogs)
         self.titleBtn.clicked.connect(self.runGWThread)
+        self.stopGetGWThread.clicked.connect(self.stopGWThread)
         self.enableAutoStart.clicked.connect(self.setAutoStart)
         self.AutoStartTipLabel.setText(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")))
         self.TUNAutoStartCheckbox.stateChanged.connect(self.switchAutoStartStatus)
@@ -130,7 +133,7 @@ class MyMainWindow(QWidget, Ui_Form):
             self.autoStartThread = AutoStartThread()
             self.autoStartThread.start()
         if self.config.get("StartShow", False):
-            myWin.show()
+            myWin.show()        
     
     def openPwdDialog(self, func):
         def _openPwdDialog():
@@ -138,10 +141,24 @@ class MyMainWindow(QWidget, Ui_Form):
         return _openPwdDialog
 
     def runGWThread(self):
-        if self.config.get("AntiZB", True):
+        if self.config.get("AntiZB", True) and self.getGWThreadStatus == False:
             self.getWindowThread = GetWindowThread(self.config.get("ZBMsg", []))
             self.getWindowThread.trigger.connect(self.openZBDialog)
+            self.getWindowThread.trigger1.connect(self.stopGWThread)
             self.getWindowThread.start()
+            self.getGWThreadStatus = True
+            self.getgwstatus.setText("正在运行")
+            self.getgwstatus.setStyleSheet("color: green;")
+    
+    def stopGWThread(self):
+        try:
+            self.getWindowThread.exitFlag = True
+            self.getWindowThread.quit()
+            self.getGWThreadStatus = False
+            self.getgwstatus.setText("未运行")
+            self.getgwstatus.setStyleSheet("color: red;")
+        except Exception:
+            pass
 
     def setAutoStart(self):
         autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
@@ -209,6 +226,9 @@ class AutoStartThread(QThread):
 
 class GetTUNStatusThread(QThread):
     trigger = pyqtSignal()
+    trigger1 = pyqtSignal()
+    emitFlag = True
+    emitFlag2 = True
 
     def __init__(self, config):
         super(GetTUNStatusThread, self).__init__()
@@ -218,6 +238,8 @@ class GetTUNStatusThread(QThread):
         self.wait()
 
     def run(self):
+        self.emitFlag = True
+        self.emitFlag2 = True
         autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
         if autoStarter.is_auto_start():
             myWin.widget_2_sub.AutoStartLabel.setText("已启用")
@@ -229,20 +251,27 @@ class GetTUNStatusThread(QThread):
         while True:
             try:
                 print("getStatus...")
-                if checkTUN():
-                    self.trigger.emit()
+                if checkTUN(url=self.config.get("checkUrl", "https://example.com")):
+                    if self.emitFlag:
+                        self.trigger.emit()
+                        self.emitFlag = False
                     myWin.widget_2_sub.TUNStatus.setStyleSheet("color: green")
                     myWin.widget_2_sub.TUNStatus.setText("已启用")
                 elif "启动中..." not in myWin.widget_2_sub.TUNStatus.text():
+                    if self.emitFlag2:
+                        self.trigger1.emit()
+                        self.emitFlag2 = False
                     myWin.widget_2_sub.TUNStatus.setStyleSheet("color: red")
                     myWin.widget_2_sub.TUNStatus.setText("未启用")
             except Exception as e:
                 print(e)
+            time.sleep(1)
 
 class GetWindowThread(QThread):
     flag = False
     exitFlag = False
     trigger = pyqtSignal(str)
+    trigger1 = pyqtSignal()
     times = 0
 
     def __init__(self, config):
@@ -275,6 +304,7 @@ class GetWindowThread(QThread):
             except Exception as e:
                 print(e)
             time.sleep(1)
+        self.trigger1.emit()
 
 class CrashThread(QThread):
     trigger = pyqtSignal()

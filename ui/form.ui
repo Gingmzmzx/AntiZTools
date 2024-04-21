@@ -287,7 +287,7 @@
        <x>10</x>
        <y>10</y>
        <width>351</width>
-       <height>240</height>
+       <height>170</height>
       </rect>
      </property>
      <property name="placeholderText">
@@ -298,13 +298,45 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>250</y>
+       <y>180</y>
        <width>75</width>
        <height>23</height>
       </rect>
      </property>
      <property name="text">
       <string>清空日志</string>
+     </property>
+    </widget>
+    <widget class="QTextBrowser" name="DebugCode">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>210</y>
+       <width>350</width>
+       <height>100</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>请输入代码...</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="execCode">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>180</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>exec(_)</string>
      </property>
     </widget>
    </widget>

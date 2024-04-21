@@ -25,7 +25,8 @@ if not os.path.exists(path.path("config.json")):
             "EXEFileName": "AntiZTools.exe",
             "RegAppName": "AntiZTools",
             "password": "ZBZ666",
-            "checkUrl": "https://example.com"
+            "checkUrl": "https://example.com",
+            "ToolTip": "GeoGebra"
         }, ensure_ascii=False))
 
 if not os.path.exists(path.path("icon.jpg")):

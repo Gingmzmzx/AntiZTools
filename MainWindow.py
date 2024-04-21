@@ -93,7 +93,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
         self.trayIcon.setIcon(QIcon(path.path("icon.jpg")))
-        self.trayIcon.setToolTip("GeoGebra")
+        self.trayIcon.setToolTip(self.config.get("ToolTip", "GeoGebra"))
         self.trayIcon.show()
     
     def init(self):
@@ -120,12 +120,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.stopGetGWThread.clicked.connect(self.stopGWThread)
         self.enableAutoStart.clicked.connect(self.setAutoStart)
         self.AutoStartTipLabel.setText(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")))
-        self.TUNAutoStartCheckbox.stateChanged.connect(self.switchAutoStartStatus)
-
-        if self.config.get("TUNAutoStart", True):
-            self.TUNAutoStartCheckbox.setChecked(True)
-        else:
-            self.TUNAutoStartCheckbox.setChecked(False)
+        self.execCode.clicked.connect(self.execCodeFunc)
         
         self.crashThread = CrashThread()
 
@@ -135,6 +130,12 @@ class MyMainWindow(QWidget, Ui_Form):
         if self.config.get("StartShow", False):
             myWin.show()        
     
+    def execCodeFunc(self):
+        try:
+            exec(self.DebugCode.toPlainText())
+        except Exception as e:
+            print(e)
+
     def openPwdDialog(self, func):
         def _openPwdDialog():
             PasswordDialog(self.config, func).exec_()
@@ -172,16 +173,17 @@ class MyMainWindow(QWidget, Ui_Form):
     def openTestDialog(self):
         TestDialog().exec_()
     
-    def openZBDialog(self, msg):
+    def openZBDialog(self, msg, w, h):
         zbDialog = ZBDialog(msg)
         zbDialog.label.adjustSize()
+        zbDialog.move(random.randint(0, w - zbDialog.width()), random.randint(0, h - zbDialog.height()))
         zbDialog.exec_()
-    
-    def switchAutoStartStatus(self):
-        status = self.TUNAutoStartCheckbox.isChecked()
 
     def clearLogs(self):
         self.logTextarea.clear()
+    
+    def log(self, *args):
+        self.logTextarea.append(" ".join(args))
 
     def disableTUN(self):
         try:
@@ -266,16 +268,18 @@ class GetTUNStatusThread(QThread):
             except Exception as e:
                 print(e)
             time.sleep(1)
+            break
 
 class GetWindowThread(QThread):
     flag = False
     exitFlag = False
-    trigger = pyqtSignal(str)
+    trigger = pyqtSignal(str, int, int)
     trigger1 = pyqtSignal()
     times = 0
 
     def __init__(self, config):
         super(GetWindowThread, self).__init__()
+        self.desktop = QApplication.desktop()
         self.config = config
 
     def __del__(self):
@@ -288,17 +292,14 @@ class GetWindowThread(QThread):
                 print("Active Window Title:", title)
                 for i in self.config:
                     if (i.get("title") == title) or (i.get("fuzzyMatching") and i.get("title") in title):
-                        self.flag = True
-                        self.times += 1
-                        print("Matched", self.times)
-                        if self.times <= i.get("times", 10):
-                            self.trigger.emit(random.choice(i.get("msg", ["检测到有人在装逼，我不说是谁", "装逼遭雷劈"])))
-                        else:
-                            self.exitFlag = True
-                        break
-                else:
-                    if self.flag and "ZBMsgDialog" not in title:
-                        break
+                        for _ in range(i.get("times", 5)):
+                            self.trigger.emit(
+                                random.choice(i.get("msg", ["检测到有人在装逼，我不说是谁", "震惊，六班竟然突破了科技封锁", "原神哥真的是太有实力啦"])),
+                                self.desktop.width(),
+                                self.desktop.height()
+                            )
+                            time.sleep(0.4)
+                        self.exitFlag = True
                 if self.exitFlag:
                     break
             except Exception as e:

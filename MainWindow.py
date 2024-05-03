@@ -2,15 +2,13 @@ import requests, traceback, sys, path, subprocess, random, time, json, psutil, p
 from PyQt5 import QtCore
 from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow
 from PyQt5.QtCore import QThread, pyqtSignal
 from ui.Ui_form import Ui_Form
-from ui.titleWindow import TitleWindow
 from ui.Ui_ZBDialog import Ui_ZBDialog
-from ui.Ui_TestDialog import Ui_TestDialog
 from ui.Ui_password import Ui_PasswordDialog
 import pygetwindow as gw
-from qt_material import apply_stylesheet
+# import qt_material
 
 def checkTUN(url="https://example.com"):
     try:
@@ -35,6 +33,7 @@ class ZBDialog(QDialog, Ui_ZBDialog):
     def __init__(self, labelText, parent=None):
         super(ZBDialog, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(QIcon(path.path("icon.jpg")))
         self.label.setText(labelText)
 
         r = random.randint(0, 255)
@@ -43,25 +42,23 @@ class ZBDialog(QDialog, Ui_ZBDialog):
         self.label.setStyleSheet(f"color: rgb({r}, {g}, {b})")
 
         self.adjustSize()
+        self.setFixedSize(self.width(), self.height())
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.activateWindow()
         self.setFocus()
-
-class TestDialog(QDialog, Ui_TestDialog):
-    def __init__(self, parent=None):
-        super(TestDialog, self).__init__(parent)
-        self.setupUi(self)
 
 class PasswordDialog(QDialog, Ui_PasswordDialog):
     def __init__(self, config, func, parent=None):
         super(PasswordDialog, self).__init__(parent)
         self.setupUi(self)
+        self.setFixedSize(self.width(), self.height())
         self.config = config
         self.func = func
         self.label_2.setVisible(False)
         self.passwordInput.setEchoMode(Qt.QLineEdit.Password)
         self.confirmBtn.clicked.connect(self.check)
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowIcon(QIcon(path.path("icon.jpg")))
     
     def check(self):
         if self.passwordInput.text() == self.config.get("password", "ZBZ666"):
@@ -70,7 +67,13 @@ class PasswordDialog(QDialog, Ui_PasswordDialog):
         else:
             self.label_2.setVisible(True)
 
-class MyMainWindow(QWidget, Ui_Form):
+class MyQAction(QAction):
+    baseText = False
+    def changeText(self, text):
+        if not self.baseText: self.baseText = self.text();
+        self.setText(self.baseText + text)
+
+class MyMainWindow(QMainWindow, Ui_Form):
     _TUNCmd = r"{} -f {}".format(path.path(r".\TUNBlock\clash-{}.exe"), path.path(r".\TUNBlock\config.yml"))
     getGWThreadStatus = False
 
@@ -78,21 +81,28 @@ class MyMainWindow(QWidget, Ui_Form):
         super(MyMainWindow,self).__init__(parent)
         self.setupUi(self)
         self.setFixedSize(self.width(), self.height())
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.setWindowIcon(QIcon("./icon.jpg"))
+        self.qIcon = QIcon(path.path("icon.jpg"))
+        self.setWindowIcon(self.qIcon)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowTitle("AntiZTools | Made for Class 6.")
     
     def _initTray(self):
+        self.internetAction = MyQAction("网络相关：", self)
+        self.stOnStAction = MyQAction("开机自启：", self)
+        self.winTitleAction = MyQAction("窗口标题：", self)
+        self.conStatusAction = MyQAction("计算机管理：", self)
         self.openAction = QAction("打开主界面", self)
         self.exitAction = QAction("退出程序", self)
         self.trayIconMenu = QMenu(self)
-        self.trayIconMenu.addAction(self.openAction)
+        self.trayIconMenu.addActions((self.internetAction, self.stOnStAction, self.winTitleAction, self.conStatusAction))
         self.trayIconMenu.addSeparator()
-        self.trayIconMenu.addAction(self.exitAction)
+        self.trayIconMenu.addActions((self.openAction, self.exitAction))
         self.openAction.triggered.connect(self.openPwdDialog(myWin.show))
         self.exitAction.triggered.connect(self.openPwdDialog(app.quit))
+        self.winTitleAction.changeText("未运行")
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
-        self.trayIcon.setIcon(QIcon(path.path("icon.jpg")))
+        self.trayIcon.setIcon(self.qIcon)
         self.trayIcon.setToolTip(self.config.get("ToolTip", "GeoGebra"))
         self.trayIcon.show()
     
@@ -114,13 +124,14 @@ class MyMainWindow(QWidget, Ui_Form):
         self.getTUNStatusThread.start()
         self.DisableTUN.clicked.connect(self.disableTUN)
         self.EnableTUN.clicked.connect(self.enableTUN)
-        self.openTestDialogButton.clicked.connect(self.openTestDialog)
         self.clearLogsBtn.clicked.connect(self.clearLogs)
         self.titleBtn.clicked.connect(self.runGWThread)
         self.stopGetGWThread.clicked.connect(self.stopGWThread)
         self.enableAutoStart.clicked.connect(self.setAutoStart)
         self.AutoStartTipLabel.setText(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")))
         self.execCode.clicked.connect(self.execCodeFunc)
+        self.disableController.clicked.connect(self.disableControllerFunc)
+        self.enableController.clicked.connect(self.enableControllerFunc)
         
         self.crashThread = CrashThread()
 
@@ -128,7 +139,12 @@ class MyMainWindow(QWidget, Ui_Form):
             self.autoStartThread = AutoStartThread()
             self.autoStartThread.start()
         if self.config.get("StartShow", False):
-            myWin.show()        
+            myWin.show()
+        
+        try:
+            self.trayIcon.showMessage(self.config.get("ToolTip", "GeoGebra"), self.config.get("startMsg", "已在后台运行"), self.qIcon)
+        except Exception:
+            pass
     
     def execCodeFunc(self):
         try:
@@ -150,6 +166,7 @@ class MyMainWindow(QWidget, Ui_Form):
             self.getGWThreadStatus = True
             self.getgwstatus.setText("正在运行")
             self.getgwstatus.setStyleSheet("color: green;")
+            self.winTitleAction.changeText("正在运行")
     
     def stopGWThread(self):
         try:
@@ -157,9 +174,32 @@ class MyMainWindow(QWidget, Ui_Form):
             self.getWindowThread.quit()
             self.getGWThreadStatus = False
             self.getgwstatus.setText("未运行")
+            self.winTitleAction.changeText("未运行")
             self.getgwstatus.setStyleSheet("color: red;")
         except Exception:
             pass
+    
+    def enableControllerFunc(self):
+        controllerStatus = reg.ControllerStatus()
+        if controllerStatus.status():
+            controllerStatus.enable()
+        if not controllerStatus.status():
+            self.controllerStatus.setText("未禁用")
+            self.conStatusAction.changeText("未禁用")
+            self.controllerStatus.setStyleSheet("color: green")
+            self.enableController.setDisabled(True)
+            self.disableController.setDisabled(False)
+
+    def disableControllerFunc(self):
+        controllerStatus = reg.ControllerStatus()
+        if not controllerStatus.status():
+            controllerStatus.disable()
+        if controllerStatus.status():
+            self.controllerStatus.setText("已禁用")
+            self.conStatusAction.changeText("已禁用")
+            self.controllerStatus.setStyleSheet("color: red")
+            self.disableController.setDisabled(True)
+            self.enableController.setDisabled(False)
 
     def setAutoStart(self):
         autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
@@ -167,11 +207,9 @@ class MyMainWindow(QWidget, Ui_Form):
             autoStarter.set_auto_start()
         if autoStarter.is_auto_start():
             self.AutoStartLabel.setText("已启用")
+            self.stOnStAction.changeText("已启用")
             self.AutoStartLabel.setStyleSheet("color: green")
             self.enableAutoStart.setDisabled(True)
-    
-    def openTestDialog(self):
-        TestDialog().exec_()
     
     def openZBDialog(self, msg, w, h):
         zbDialog = ZBDialog(msg)
@@ -224,7 +262,7 @@ class AutoStartThread(QThread):
         # Start TUN Mode
         if checkTUN():
             print("Cannot connect to the Internet. Starting TUN Mode...")
-            myWin.widget_2_sub.enableTUN()
+            myWin.enableTUN()
 
 class GetTUNStatusThread(QThread):
     trigger = pyqtSignal()
@@ -242,14 +280,30 @@ class GetTUNStatusThread(QThread):
     def run(self):
         self.emitFlag = True
         self.emitFlag2 = True
+
         autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
         if autoStarter.is_auto_start():
-            myWin.widget_2_sub.AutoStartLabel.setText("已启用")
-            myWin.widget_2_sub.AutoStartLabel.setStyleSheet("color: green")
-            myWin.widget_2_sub.enableAutoStart.setDisabled(True)
+            myWin.AutoStartLabel.setText("已启用")
+            myWin.AutoStartLabel.setStyleSheet("color: green")
+            myWin.enableAutoStart.setDisabled(True)
+            myWin.stOnStAction.changeText("已启用")
         else:
-            myWin.widget_2_sub.AutoStartLabel.setText("未启用")
-            myWin.widget_2_sub.AutoStartLabel.setStyleSheet("color: red")
+            myWin.AutoStartLabel.setText("未启用")
+            myWin.AutoStartLabel.setStyleSheet("color: red")
+            myWin.stOnStAction.changeText("未启用")
+        
+        controllerStatus = reg.ControllerStatus()
+        if controllerStatus.status():
+            myWin.controllerStatus.setText("已禁用")
+            myWin.controllerStatus.setStyleSheet("color: red")
+            myWin.disableController.setDisabled(True)
+            myWin.conStatusAction.changeText("已禁用")
+        else:
+            myWin.controllerStatus.setText("未禁用")
+            myWin.controllerStatus.setStyleSheet("color: green")
+            myWin.enableController.setDisabled(True)
+            myWin.conStatusAction.changeText("未禁用")
+        
         while True:
             try:
                 print("getStatus...")
@@ -257,14 +311,16 @@ class GetTUNStatusThread(QThread):
                     if self.emitFlag:
                         self.trigger.emit()
                         self.emitFlag = False
-                    myWin.widget_2_sub.TUNStatus.setStyleSheet("color: green")
-                    myWin.widget_2_sub.TUNStatus.setText("已启用")
-                elif "启动中..." not in myWin.widget_2_sub.TUNStatus.text():
+                    myWin.TUNStatus.setStyleSheet("color: green")
+                    myWin.TUNStatus.setText("已启用")
+                    myWin.internetAction.changeText("已启用")
+                elif "启动中..." not in myWin.TUNStatus.text():
                     if self.emitFlag2:
                         self.trigger1.emit()
                         self.emitFlag2 = False
-                    myWin.widget_2_sub.TUNStatus.setStyleSheet("color: red")
-                    myWin.widget_2_sub.TUNStatus.setText("未启用")
+                    myWin.TUNStatus.setStyleSheet("color: red")
+                    myWin.TUNStatus.setText("未启用")
+                    myWin.internetAction.changeText("未启用")
             except Exception as e:
                 print(e)
             time.sleep(1)
@@ -324,7 +380,7 @@ class CrashThread(QThread):
                 self.trigger.emit()
                 break
             try:
-                output = myWin.widget_2_sub.TUNProcess.stdout.readline().strip()
+                output = myWin.TUNProcess.stdout.readline().strip()
                 print("Output", output)
                 if output != oldLine:
                     # update text browser
@@ -338,8 +394,8 @@ class CrashThread(QThread):
             time.sleep(1)
     
     def appendText(self, str):
-        myWin.widget_2_sub.logTextarea.append(str.rstrip())
-        myWin.widget_2_sub.logTextarea.moveCursor(myWin.widget_2_sub.logTextarea.textCursor().End)
+        myWin.logTextarea.append(str.rstrip())
+        myWin.logTextarea.moveCursor(myWin.logTextarea.textCursor().End)
     
     def stop(self):
         self.flag = True
@@ -347,16 +403,13 @@ class CrashThread(QThread):
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QApplication(sys.argv)
 # setup stylesheet
-# apply_stylesheet(app, theme='dark_teal.xml')
+# qt_material.apply_stylesheet(app, theme='dark_teal.xml')
 QApplication.setQuitOnLastWindowClosed(False)
-myWin = TitleWindow(widget_2_sub=MyMainWindow(),icon_path=path.path("icon.jpg"),title='AntiZTools | Made for Class 6.')
-myWin.setWindowIcon(QIcon("./icon.jpg"))
-myWin.setWindowTitle("AntiZTools | Made for Class 6.")
-myWin.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint|QtCore.Qt.FramelessWindowHint)
+myWin = MyMainWindow()
 
 def run():
     # init widget
-    myWin.widget_2_sub.init()
+    myWin.init()
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

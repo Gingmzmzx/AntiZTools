@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>375</width>
-    <height>351</height>
+    <height>378</height>
    </rect>
   </property>
   <property name="font">
@@ -23,15 +23,18 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>376</width>
-     <height>350</height>
+     <width>380</width>
+     <height>380</height>
     </rect>
    </property>
    <property name="acceptDrops">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="autoFillBackground">
     <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
    <property name="tabPosition">
     <enum>QTabWidget::North</enum>
@@ -136,25 +139,12 @@
        <x>10</x>
        <y>210</y>
        <width>350</width>
-       <height>100</height>
+       <height>60</height>
       </rect>
      </property>
      <property name="title">
       <string>窗口标题</string>
      </property>
-     <widget class="QPushButton" name="openTestDialogButton">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>60</y>
-        <width>90</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>打开测试窗口</string>
-      </property>
-     </widget>
      <widget class="QPushButton" name="titleBtn">
       <property name="geometry">
        <rect>
@@ -276,6 +266,74 @@
       </property>
      </widget>
     </widget>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>280</y>
+       <width>350</width>
+       <height>60</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>计算机管理</string>
+     </property>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>70</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>注册表状态</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="controllerStatus">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>30</y>
+        <width>50</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>获取中...</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="disableController">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>30</y>
+        <width>70</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>禁用管理</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="enableController">
+      <property name="geometry">
+       <rect>
+        <x>240</x>
+        <y>30</y>
+        <width>70</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>启用管理</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_log">
     <attribute name="title">
@@ -287,7 +345,7 @@
        <x>10</x>
        <y>10</y>
        <width>351</width>
-       <height>170</height>
+       <height>190</height>
       </rect>
      </property>
      <property name="placeholderText">
@@ -298,7 +356,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>180</y>
+       <y>200</y>
        <width>75</width>
        <height>23</height>
       </rect>
@@ -311,9 +369,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>210</y>
+       <y>229</y>
        <width>350</width>
-       <height>100</height>
+       <height>111</height>
       </rect>
      </property>
      <property name="toolTip">
@@ -330,7 +388,7 @@
      <property name="geometry">
       <rect>
        <x>280</x>
-       <y>180</y>
+       <y>200</y>
        <width>75</width>
        <height>23</height>
       </rect>

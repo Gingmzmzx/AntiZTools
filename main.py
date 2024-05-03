@@ -26,7 +26,8 @@ if not os.path.exists(path.path("config.json")):
             "RegAppName": "AntiZTools",
             "password": "ZBZ666",
             "checkUrl": "https://example.com",
-            "ToolTip": "GeoGebra"
+            "ToolTip": "GeoGebra",
+            "startMsg": "已在后台运行"
         }, ensure_ascii=False))
 
 if not os.path.exists(path.path("icon.jpg")):

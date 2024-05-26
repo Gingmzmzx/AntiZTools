@@ -120,6 +120,8 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.enableAutoStart.clicked.connect(self.setAutoStart)
         self.AutoStartTipLabel.setText(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")))
         self.execCode.clicked.connect(self.execCodeFunc)
+        self.execCode_2.clicked.connect(self.execCodeThreadFunc)
+        self.debugHelpBtn.clicked.connect(self.debugHelp)
         self.disableController.clicked.connect(self.disableControllerFunc)
         self.enableController.clicked.connect(self.enableControllerFunc)
         self.getWindowThread = GetWindowThread(self.config.get("ZBMsg", []))
@@ -155,11 +157,32 @@ class MyMainWindow(QMainWindow, Ui_Form):
     def resetCfg(self):
         self.CfgTextarea.setText(json.dumps(self.config, ensure_ascii=False, indent=4))
     
+    def debugHelp(self):
+        QMessageBox.information(self, "调试指南", """
+        主线程执行：在MainWindow中执行代码\n
+        子线程执行：在RunCodeThread中执行代码\n
+        在主线程中，调用self.log(*args)来输出调试信息到日志框\n
+        在子线程中，调用self.logger.emit(str)来输出调试信息到日志框\n
+        在子线程中，调用self.execer.emit(str, (args,))来执行主线程名为str的方法，并附带参数*(args,)
+        """)
+
     def execCodeFunc(self):
         try:
             exec(self.DebugCode.toPlainText())
         except Exception as e:
-            print(e)
+            self.log(str(e))
+    
+    def execCodeThreadFunc(self):
+        runCodeThread = RunCodeThread(self.DebugCode.toPlainText())
+        runCodeThread.logger.connect(self.log)
+        runCodeThread.execer.connect(self.execInnerFunc)
+        runCodeThread.start()
+    
+    def execInnerFunc(self, func, args):
+        try:
+            getattr(self, func)(*args)
+        except Exception as e:
+            self.log(str(e))
 
     def openPwdDialog(self, func):
         def _openPwdDialog():
@@ -230,7 +253,8 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.logTextarea.clear()
     
     def log(self, *args):
-        self.logTextarea.append(" ".join(args))
+        for i in args:
+            self.logTextarea.append(str(i)+" ")
 
 class AutoStartThread(QThread):
     trigger = pyqtSignal()
@@ -327,6 +351,23 @@ class GetWindowThread(QThread):
                 print(e)
             time.sleep(1)
         self.trigger1.emit()
+
+class RunCodeThread(QThread):
+    logger = pyqtSignal(str)
+    execer = pyqtSignal(str, tuple)
+
+    def __init__(self, code):
+        super(RunCodeThread, self).__init__()
+        self.code = str(code)
+    
+    def __del__(self):
+        self.wait()
+    
+    def run(self):
+        try:
+            exec(self.code)
+        except Exception as e:
+            self.logger.emit(str(e))
 
 
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)

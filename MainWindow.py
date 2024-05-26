@@ -1,8 +1,8 @@
-import requests, traceback, sys, path, subprocess, random, time, json, psutil, platform, reg, os, shutil, tempfile
+import requests, traceback, sys, path, random, time, json, reg, os, shutil, tempfile
 from PyQt5 import QtCore
 from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow
 from PyQt5.QtCore import QThread, pyqtSignal
 from ui.Ui_form import Ui_Form
 from ui.Ui_ZBDialog import Ui_ZBDialog
@@ -168,6 +168,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
 
     def runGWThread(self):
         if self.config.get("AntiZB", True) and self.getGWThreadStatus == False:
+            self.getWindowThread.exitFlag = False
             self.getWindowThread.start()
             self.getGWThreadStatus = True
             self.changeTrayIcon(path.path("icon_colored.png"))

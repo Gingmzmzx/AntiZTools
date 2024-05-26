@@ -1,4 +1,4 @@
-import requests, traceback, sys, path, subprocess, random, time, json, psutil, platform, reg
+import requests, traceback, sys, path, subprocess, random, time, json, psutil, platform, reg, os, shutil, tempfile
 from PyQt5 import QtCore
 from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
@@ -10,7 +10,7 @@ from ui.Ui_password import Ui_PasswordDialog
 import pygetwindow as gw
 # import qt_material
 
-def checkTUN(url="https://example.com"):
+def checkNetwork(url="https://example.com"):
     try:
         response = requests.get(url, timeout=5)
         response.raise_for_status()  # 如果响应状态码不是200，将抛出HTTPError异常
@@ -18,16 +18,6 @@ def checkTUN(url="https://example.com"):
     except Exception as e:
         print(e)
     return True
-
-def kill_process_by_port(port):
-    try:
-        for conn in psutil.net_connections():
-            if conn.laddr.port == port and conn.status == 'LISTEN':
-                psutil.Process(conn.pid).terminate()
-                print(f"Process with PID {conn.pid} killed.")
-                break
-    except Exception as e:
-        print("Cannot kill process:", e)
 
 class ZBDialog(QDialog, Ui_ZBDialog):
     def __init__(self, labelText, parent=None):
@@ -74,7 +64,6 @@ class MyQAction(QAction):
         self.setText(self.baseText + text)
 
 class MyMainWindow(QMainWindow, Ui_Form):
-    _TUNCmd = r"{} -f {}".format(path.path(r".\TUNBlock\clash-{}.exe"), path.path(r".\TUNBlock\config.yml"))
     getGWThreadStatus = False
 
     def __init__(self,parent =None):
@@ -87,14 +76,13 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.setWindowTitle("AntiZTools | Made for Class 6.")
     
     def _initTray(self):
-        self.internetAction = MyQAction("网络相关：", self)
         self.stOnStAction = MyQAction("开机自启：", self)
         self.winTitleAction = MyQAction("窗口标题：", self)
         self.conStatusAction = MyQAction("计算机管理：", self)
         self.openAction = QAction("打开主界面", self)
         self.exitAction = QAction("退出程序", self)
         self.trayIconMenu = QMenu(self)
-        self.trayIconMenu.addActions((self.internetAction, self.stOnStAction, self.winTitleAction, self.conStatusAction))
+        self.trayIconMenu.addActions((self.stOnStAction, self.winTitleAction, self.conStatusAction))
         self.trayIconMenu.addSeparator()
         self.trayIconMenu.addActions((self.openAction, self.exitAction))
         self.openAction.triggered.connect(self.openPwdDialog(myWin.show))
@@ -105,6 +93,9 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.trayIcon.setIcon(self.qIcon)
         self.trayIcon.setToolTip(self.config.get("ToolTip", "GeoGebra"))
         self.trayIcon.show()
+    
+    def changeTrayIcon(self, icon):
+        self.trayIcon.setIcon(QIcon(icon))
     
     def init(self):
         try:
@@ -119,11 +110,10 @@ class MyMainWindow(QMainWindow, Ui_Form):
 
         self._initTray()
 
-        self.getTUNStatusThread = GetTUNStatusThread(self.config)
-        self.getTUNStatusThread.trigger.connect(self.runGWThread)
-        self.getTUNStatusThread.start()
-        self.DisableTUN.clicked.connect(self.disableTUN)
-        self.EnableTUN.clicked.connect(self.enableTUN)
+        self.autoStartThread = AutoStartThread(self.config)
+        self.autoStartThread.trigger.connect(self.runGWThread)
+        self.autoStartThread.messager.connect(self.showMessage)
+        self.autoStartThread.start()
         self.clearLogsBtn.clicked.connect(self.clearLogs)
         self.titleBtn.clicked.connect(self.runGWThread)
         self.stopGetGWThread.clicked.connect(self.stopGWThread)
@@ -132,19 +122,38 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.execCode.clicked.connect(self.execCodeFunc)
         self.disableController.clicked.connect(self.disableControllerFunc)
         self.enableController.clicked.connect(self.enableControllerFunc)
-        
-        self.crashThread = CrashThread()
+        self.getWindowThread = GetWindowThread(self.config.get("ZBMsg", []))
+        self.getWindowThread.trigger.connect(self.openZBDialog)
+        self.getWindowThread.trigger1.connect(self.stopGWThread)
+        self.resetCfg()
+        self.saveCfgBtn.clicked.connect(self.saveCfg)
+        self.reCfgBtn.clicked.connect(self.resetCfg)
 
-        if self.config.get("TUNAutoStart", True):
-            self.autoStartThread = AutoStartThread()
-            self.autoStartThread.start()
         if self.config.get("StartShow", False):
             myWin.show()
-        
+        if self.config.get("startMsg", "已在后台运行") != "":
+            self.showMessage(self.config.get("startMsg", "已在后台运行"))
+    
+    def showMessage(self, msg, *args, **kwargs):
         try:
-            self.trayIcon.showMessage(self.config.get("ToolTip", "GeoGebra"), self.config.get("startMsg", "已在后台运行"), self.qIcon)
+            self.trayIcon.showMessage(self.config.get("ToolTip", "GeoGebra"), msg, self.qIcon, *args, **kwargs)
         except Exception:
             pass
+
+    def saveCfg(self):
+        cfg_str = self.CfgTextarea.toPlainText()
+        try:
+            with open(path.path("config.json"), "w", encoding="utf-8") as f:
+                f.write(cfg_str)
+            QMessageBox.information(self, "保存成功", "保存成功！\n有些功能重启程序后生效")
+        except Exception as e:
+            QMessageBox.warning(self, "保存失败", "保存失败！\n{}".format(str(e)))
+        self.config = json.loads(cfg_str)
+        self.autoStartThread.config = self.config
+        self.getWindowThread.config = self.config.get("ZBMsg", [])
+    
+    def resetCfg(self):
+        self.CfgTextarea.setText(json.dumps(self.config, ensure_ascii=False, indent=4))
     
     def execCodeFunc(self):
         try:
@@ -159,11 +168,9 @@ class MyMainWindow(QMainWindow, Ui_Form):
 
     def runGWThread(self):
         if self.config.get("AntiZB", True) and self.getGWThreadStatus == False:
-            self.getWindowThread = GetWindowThread(self.config.get("ZBMsg", []))
-            self.getWindowThread.trigger.connect(self.openZBDialog)
-            self.getWindowThread.trigger1.connect(self.stopGWThread)
             self.getWindowThread.start()
             self.getGWThreadStatus = True
+            self.changeTrayIcon(path.path("icon_colored.png"))
             self.getgwstatus.setText("正在运行")
             self.getgwstatus.setStyleSheet("color: green;")
             self.winTitleAction.changeText("正在运行")
@@ -173,6 +180,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
             self.getWindowThread.exitFlag = True
             self.getWindowThread.quit()
             self.getGWThreadStatus = False
+            self.changeTrayIcon(path.path("icon.jpg"))
             self.getgwstatus.setText("未运行")
             self.winTitleAction.changeText("未运行")
             self.getgwstatus.setStyleSheet("color: red;")
@@ -223,55 +231,14 @@ class MyMainWindow(QMainWindow, Ui_Form):
     def log(self, *args):
         self.logTextarea.append(" ".join(args))
 
-    def disableTUN(self):
-        try:
-            self.crashThread.stop()
-            self.TUNProcess.terminate()
-        except Exception as e:
-            print(e)
-
-    def enableTUN(self):
-        self._TUNCmd = self._TUNCmd.format("win32" if platform.architecture()[0] == "32bit" else "win64")
-        print("Exec", self._TUNCmd)
-        kill_process_by_port(9090)
-        kill_process_by_port(7890)
-        kill_process_by_port(7777)
-        self.TUNProcess = subprocess.Popen(
-            self._TUNCmd,
-            stdout=subprocess.PIPE,
-            universal_newlines=True,
-            encoding='utf-8'
-        )
-        self.TUNStatus.setText("启动中...")
-        self.TUNStatus.setStyleSheet("color: yellow")
-        self.crashThread.start()
-
 class AutoStartThread(QThread):
-    def __init__(self):
-        super(AutoStartThread, self).__init__()
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        self.times = 0
-        while self.times <= 6:
-            if self.times == -1: return;
-            if checkTUN(): self.times += 1;
-            else: self.times = -1;
-        # Start TUN Mode
-        if checkTUN():
-            print("Cannot connect to the Internet. Starting TUN Mode...")
-            myWin.enableTUN()
-
-class GetTUNStatusThread(QThread):
     trigger = pyqtSignal()
-    trigger1 = pyqtSignal()
+    messager = pyqtSignal(str)
     emitFlag = True
     emitFlag2 = True
 
     def __init__(self, config):
-        super(GetTUNStatusThread, self).__init__()
+        super(AutoStartThread, self).__init__()
         self.config = config
 
     def __del__(self):
@@ -304,27 +271,24 @@ class GetTUNStatusThread(QThread):
             myWin.enableController.setDisabled(True)
             myWin.conStatusAction.changeText("未禁用")
         
-        while True:
-            try:
-                print("getStatus...")
-                if checkTUN(url=self.config.get("checkUrl", "https://example.com")):
-                    if self.emitFlag:
-                        self.trigger.emit()
-                        self.emitFlag = False
-                    myWin.TUNStatus.setStyleSheet("color: green")
-                    myWin.TUNStatus.setText("已启用")
-                    myWin.internetAction.changeText("已启用")
-                elif "启动中..." not in myWin.TUNStatus.text():
-                    if self.emitFlag2:
-                        self.trigger1.emit()
-                        self.emitFlag2 = False
-                    myWin.TUNStatus.setStyleSheet("color: red")
-                    myWin.TUNStatus.setText("未启用")
-                    myWin.internetAction.changeText("未启用")
-            except Exception as e:
-                print(e)
-            time.sleep(1)
-            break
+        print("getStatus...")
+        if checkNetwork(url=self.config.get("checkUrl", "https://example.com")):
+            self.trigger.emit()
+        
+        temp_dir = tempfile.gettempdir()
+        failedtimes, successtimes, cleantipstr = 0, 0, ""
+        for item in os.listdir(temp_dir):
+            if item.startswith(self.config.get("TempFilePrefix", "_MEI")):
+                try:
+                    print("Delete Temp:", item)
+                    shutil.rmtree(os.path.join(temp_dir, item))
+                    successtimes += 1
+                except Exception as e:
+                    failedtimes += 1
+                    print(e)
+        if failedtimes >= int(self.config.get("cleanFailedTimes", 2)):
+            cleantipstr = "。\n失败数量过多，请引起注意！"
+        self.messager.emit(f"临时文件清理完毕，成功{successtimes}个，失败{failedtimes}个{cleantipstr}")
 
 class GetWindowThread(QThread):
     flag = False
@@ -363,42 +327,6 @@ class GetWindowThread(QThread):
             time.sleep(1)
         self.trigger1.emit()
 
-class CrashThread(QThread):
-    trigger = pyqtSignal()
-    flag = False
-
-    def __init__(self):
-        super(CrashThread, self).__init__()
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        oldLine = None
-        while True:
-            if self.flag:
-                self.trigger.emit()
-                break
-            try:
-                output = myWin.TUNProcess.stdout.readline().strip()
-                print("Output", output)
-                if output != oldLine:
-                    # update text browser
-                    self.appendText(output)
-                    oldLine = output
-            except Exception as e:
-                try:
-                    self.appendText(e)
-                except Exception:
-                    print(e)
-            time.sleep(1)
-    
-    def appendText(self, str):
-        myWin.logTextarea.append(str.rstrip())
-        myWin.logTextarea.moveCursor(myWin.logTextarea.textCursor().End)
-    
-    def stop(self):
-        self.flag = True
 
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QApplication(sys.argv)

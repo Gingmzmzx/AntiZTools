@@ -6,7 +6,7 @@ block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=[r'F:\Projects\AntiZTools'],
+    pathex=[r'E:\Projects\AntiZTools'],
     binaries=[],
     hookspath=[],
     hooksconfig={},
@@ -39,5 +39,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=r"F:\Projects\AntiZTools\icon.jpg"
+    icon=r"E:\Projects\AntiZTools\icon.jpg"
 )

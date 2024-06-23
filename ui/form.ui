@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>375</width>
-    <height>279</height>
+    <height>348</height>
    </rect>
   </property>
   <property name="font">
@@ -23,8 +23,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>370</width>
-     <height>280</height>
+     <width>377</width>
+     <height>349</height>
     </rect>
    </property>
    <property name="acceptDrops">
@@ -136,7 +136,7 @@
       <property name="geometry">
        <rect>
         <x>160</x>
-        <y>30</y>
+        <y>26</y>
         <width>101</width>
         <height>23</height>
        </rect>
@@ -230,7 +230,7 @@
       <property name="geometry">
        <rect>
         <x>160</x>
-        <y>30</y>
+        <y>25</y>
         <width>70</width>
         <height>23</height>
        </rect>
@@ -243,13 +243,52 @@
       <property name="geometry">
        <rect>
         <x>240</x>
-        <y>30</y>
+        <y>25</y>
         <width>70</width>
         <height>23</height>
        </rect>
       </property>
       <property name="text">
        <string>启用管理</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>250</y>
+       <width>340</width>
+       <height>60</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>调试</string>
+     </property>
+     <widget class="QPushButton" name="openDebugForm">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>25</y>
+        <width>90</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>打开调试窗口</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="debugFormTitle">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>26</y>
+        <width>188</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>请输入调试窗口标题</string>
       </property>
      </widget>
     </widget>
@@ -261,10 +300,10 @@
     <widget class="QTextBrowser" name="logTextarea">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>351</width>
-       <height>100</height>
+       <x>6</x>
+       <y>6</y>
+       <width>359</width>
+       <height>133</height>
       </rect>
      </property>
      <property name="placeholderText">
@@ -275,7 +314,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>144</y>
        <width>75</width>
        <height>23</height>
       </rect>
@@ -287,10 +326,10 @@
     <widget class="QTextBrowser" name="DebugCode">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>140</y>
-       <width>350</width>
-       <height>100</height>
+       <x>6</x>
+       <y>171</y>
+       <width>358</width>
+       <height>140</height>
       </rect>
      </property>
      <property name="toolTip">
@@ -307,7 +346,7 @@
      <property name="geometry">
       <rect>
        <x>280</x>
-       <y>110</y>
+       <y>144</y>
        <width>75</width>
        <height>23</height>
       </rect>
@@ -320,7 +359,7 @@
      <property name="geometry">
       <rect>
        <x>200</x>
-       <y>110</y>
+       <y>144</y>
        <width>75</width>
        <height>23</height>
       </rect>
@@ -333,7 +372,7 @@
      <property name="geometry">
       <rect>
        <x>90</x>
-       <y>110</y>
+       <y>144</y>
        <width>75</width>
        <height>23</height>
       </rect>
@@ -350,10 +389,10 @@
     <widget class="QTextBrowser" name="CfgTextarea">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>340</width>
-       <height>210</height>
+       <x>6</x>
+       <y>7</y>
+       <width>359</width>
+       <height>278</height>
       </rect>
      </property>
      <property name="readOnly">
@@ -364,7 +403,7 @@
      <property name="geometry">
       <rect>
        <x>270</x>
-       <y>220</y>
+       <y>289</y>
        <width>75</width>
        <height>23</height>
       </rect>
@@ -377,7 +416,7 @@
      <property name="geometry">
       <rect>
        <x>180</x>
-       <y>220</y>
+       <y>289</y>
        <width>75</width>
        <height>23</height>
       </rect>

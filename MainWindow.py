@@ -8,12 +8,15 @@ from ui.Ui_form import Ui_Form
 from ui.Ui_ZBDialog import Ui_ZBDialog
 from ui.Ui_debugForm import Ui_debugForm
 from ui.Ui_password import Ui_PasswordDialog
+from ui.Ui_aowForm import Ui_aowForm
+from aow import Aow1, Aow2, Aow3
 from config import Config
 from pynput import keyboard, mouse
 import pygetwindow as gw
 # import qt_material
 
 config = Config()
+config.update()
 
 def checkNetwork(url="https://example.com"):
     # return True # Debug
@@ -68,6 +71,49 @@ class MyQAction(QAction):
         if not self.baseText: self.baseText = self.text();
         self.setText(self.baseText + text)
 
+class AowForm(QMainWindow, Ui_aowForm):
+    scriptThreadStatus = False
+
+    def __init__(self, width, height, parent=None):
+        super(AowForm, self).__init__(parent)
+        self.setupUi(self)
+        self.setFixedSize(self.width(), self.height())
+        self.setWindowIcon(QIcon(path.path("icon.jpg")))
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        self.move(
+            width - self.width() - 10,
+            height - self.height() - 50
+        )
+        self.screenWidth = width
+        self.screenHeight = height
+        self.stopBtn.clicked.connect(self.stop)
+        self.stopBtn.setDisabled(True)
+        self.aow1Btn.clicked.connect(self.runScript(Aow1))
+        self.aow2Btn.clicked.connect(self.runScript(Aow2))
+        self.aow3Btn.clicked.connect(self.runScript(Aow3))
+    
+    def runScript(self, script):
+        def _runScript():
+            if not self.scriptThreadStatus:
+                self.aow1Btn.setDisabled(True)
+                self.aow2Btn.setDisabled(True)
+                self.aow3Btn.setDisabled(True)
+                self.stopBtn.setDisabled(False)
+                self.scriptThread = script(self.screenWidth, self.screenHeight)
+                self.scriptThread.start()
+                self.scriptThreadStatus = True
+        return _runScript
+
+    def stop(self):
+        self.scriptThread.forceStop()
+        self.scriptThread.quit()
+        self.scriptThread.wait()
+        self.scriptThreadStatus = False
+        self.aow1Btn.setDisabled(False)
+        self.aow2Btn.setDisabled(False)
+        self.aow3Btn.setDisabled(False)
+        self.stopBtn.setDisabled(True)
+
 class MyMainWindow(QMainWindow, Ui_Form):
     getGWThreadStatus = False
     ssTimerFlag = False
@@ -88,12 +134,16 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.conStatusAction = MyQAction("计算机管理：", self)
         self.openAction = QAction("打开主界面", self)
         self.exitAction = QAction("退出程序", self)
+        self.aowAction = QAction("窗口的艺术", self)
         self.trayIconMenu = QMenu(self)
         self.trayIconMenu.addActions((self.stOnStAction, self.winTitleAction, self.conStatusAction))
+        self.trayIconMenu.addSeparator()
+        self.trayIconMenu.addAction(self.aowAction)
         self.trayIconMenu.addSeparator()
         self.trayIconMenu.addActions((self.openAction, self.exitAction))
         self.openAction.triggered.connect(self.openPwdDialog(myWin.show))
         self.exitAction.triggered.connect(self.openPwdDialog(app.quit))
+        self.aowAction.triggered.connect(self.openAowDialog)
         self.winTitleAction.changeText("未运行")
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
@@ -113,6 +163,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
 
     def _init(self):
         self._initTray()
+        self.desktop = QApplication.desktop()
 
         self.autoStartThread = AutoStartThread()
         self.autoStartThread.messager.connect(self.showMessage)
@@ -136,8 +187,9 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.resetCfg()
         self.saveCfgBtn.clicked.connect(self.saveCfg)
         self.reCfgBtn.clicked.connect(self.resetCfg)
+        self.acCfgBtn.clicked.connect(self.acCfg)
 
-        self.getWindowThread = GetWindowThread()
+        self.getWindowThread = GetWindowThread(self.desktop.width(), self.desktop.height())
         self.getWindowThread.execer.connect(self.execInnerFunc)
         self.getWindowThread.logger.connect(self.log)
         self.getWindowThread.stopThread.connect(self.stopGWThread)
@@ -158,11 +210,15 @@ class MyMainWindow(QMainWindow, Ui_Form):
             self.log("<i>Show Tray Message.</i>")
             self.showMessage(config.get("Tray.StartMsg"))
     
+    def openAowDialog(self):
+        self.aowForm = AowForm(self.desktop.width(), self.desktop.height())
+        self.aowForm.show()
+
     def openDebugFormFunc(self):
         if self.getGWThreadStatus:
             tt = self.debugFormTitle.text()
             tt = tt if tt else "debugForm"
-            self.debugForm = DebugForm(tt)
+            self.debugForm = DebugForm(tt, self.desktop.width(), self.desktop.height())
             self.debugForm.closeBtn.clicked.connect(self.closeDebugForm)
             self.getWindowThread.debugFormStatus = True
             self.debugForm.show()
@@ -225,6 +281,10 @@ class MyMainWindow(QMainWindow, Ui_Form):
     
     def resetCfg(self):
         self.CfgTextarea.setText(json.dumps(config.data, ensure_ascii=False, indent=4))
+    
+    def acCfg(self):
+        config.autoComplete()
+        self.resetCfg()
     
     def debugHelp(self):
         QMessageBox.information(self, "调试指南", """
@@ -339,14 +399,17 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.logTextarea.append(logStr)
 
 class DebugForm(QMainWindow, Ui_debugForm):
-    def __init__(self, title, parent=None):
+    def __init__(self, title, width, height, parent=None):
         super(DebugForm, self).__init__(parent)
         self.setupUi(self)
         self.setFixedSize(self.width(), self.height())
-        self.qIcon = QIcon(path.path("icon.jpg"))
-        self.setWindowIcon(self.qIcon)
+        self.setWindowIcon(QIcon(path.path("icon.jpg")))
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.setWindowTitle(title)
+        self.move(
+            width - self.width() - 10,
+            height - self.height() - 50
+        )
 
     def setTitleText(self, text):
         self.titletext.setText(text)
@@ -461,9 +524,11 @@ class GetWindowThread(QThread):
     PasswordFlag = False
     debugFormStatus = False
 
-    def __init__(self):
+    def __init__(self, width, height):
         super(GetWindowThread, self).__init__()
-        self.desktop = QApplication.desktop()
+        self.width = width
+        self.height = height
+        self.hooks = config.get("WindowTitle.hook")
     
     def forceStop(self):
         self.exitFlag = True
@@ -480,12 +545,20 @@ class GetWindowThread(QThread):
             try:
                 if self.exitFlag:
                     break
-                title = gw.getActiveWindowTitle()
+                window = gw.getActiveWindow()
+                if window == None:
+                    time.sleep(int(config.get("WindowTitle.Interval")))
+                    continue
+                title = window.title
                 matchFlag = False
+                isNewWindow = False
                 if _oldTitle != title and self.debugFormStatus:
                     self.execer.emit("setDebugForm", (title,))
+                    isNewWindow = True
                     _oldTitle = title
-                for i in config.get("WindowTitle.hook"):
+                for i in self.hooks:
+                    if not i.get("enable", True):
+                        continue
                     if (i.get("title") == title) or (i.get("fuzzyMatching") and i.get("title") in title):
                         matchFlag = True
                         if i.get("handler") == "ZBDialog":
@@ -494,12 +567,19 @@ class GetWindowThread(QThread):
                                 self.openZBDialog(i.get("data", {}))
                                 self.execer.emit("changeTrayIcon", (path.path("icon.jpg"),))
                                 self.ZBDialogFlag = True
-                        elif i.get("handler") == "ListenPassword":
+                        elif i.get("handler") == "keyboardListener":
                             if not self.PasswordFlag:
                                 self.PasswordFlag = True
                                 # Start catch keyboard input thread
                                 self.execer.emit("runKeyBoardThread", ())
                                 self.logger.emit("Started KeyBoard Listener.")
+                        elif i.get("handler") == "closeWindow":
+                            if isNewWindow and window != None:
+                                window.close()
+                                self.logger.emit("Closed Window: " + title)
+                                msg = i.get("data", {}).get("msg", "已自动关闭不良界面")
+                                if msg:
+                                    self.execer.emit("showMessage", (msg,))
                 if not matchFlag:
                     if self.PasswordFlag:
                         self.PasswordFlag = False
@@ -507,7 +587,7 @@ class GetWindowThread(QThread):
                         self.execer.emit("stopKeyBoardThread", ())
                         self.logger.emit("Stopped KeyBoard Listener.")
             except Exception as e:
-                print(e)
+                self.logger.emit(e)
             time.sleep(int(config.get("WindowTitle.Interval")))
         self.stopThread.emit()
         self.debugFormStatus = False
@@ -518,8 +598,8 @@ class GetWindowThread(QThread):
                 "openZBDialog",
                 (
                     random.choice(i.get("msg", ["检测到有人在装逼，我不说是谁", "震惊，六班竟然突破了科技封锁", "原神哥真的是太有实力啦"])),
-                    self.desktop.width(),
-                    self.desktop.height(),
+                    self.width,
+                    self.height,
                 )
             )
             time.sleep(0.4)

@@ -1,11 +1,13 @@
 import os, path, json
 
-class ConfigException(Exception):
-    def __init__(self, message):
-        super().__init__(message)
+class ConfigException(Exception): pass;
 
 class Config:
     originData = {
+        "Update":{
+            "version": 114,
+            "forceUpdate": True
+        },
         "Config": {
             "StartShow": False,
             "EXEFileName": "AntiZTools.exe",
@@ -23,6 +25,7 @@ class Config:
             "hook": [
                 {
                     "title": "服务",
+                    "enable": True,
                     "fuzzyMatching": False,
                     "handler": "ZBDialog",
                     "data": {
@@ -32,6 +35,7 @@ class Config:
                 },
                 {
                     "title": "网络和共享中心",
+                    "enable": True,
                     "fuzzyMatching": False,
                     "handler": "ZBDialog",
                     "data": {
@@ -41,6 +45,7 @@ class Config:
                 },
                 {
                     "title": "控制面板",
+                    "enable": True,
                     "fuzzyMatching": False,
                     "handler": "ZBDialog",
                     "data": {
@@ -50,6 +55,7 @@ class Config:
                 },
                 {
                     "title": "计算机管理",
+                    "enable": True,
                     "fuzzyMatching": False,
                     "handler": "ZBDialog",
                     "data": {
@@ -59,8 +65,17 @@ class Config:
                 },
                 {
                     "title": "账号登录",
+                    "enable": False,
                     "fuzzyMatching": False,
-                    "handler": "ListenPassword"
+                    "handler": "keyboardListener"
+                },{
+                    "title": "火绒",
+                    "enable": True,
+                    "fuzzyMatching": True,
+                    "handler": "closeWindow",
+                    "data": {
+                        "msg": "已自动关闭不良界面"
+                    }
                 }
             ]
         },
@@ -98,7 +113,7 @@ class Config:
         originData = self.originData
 
         for item in keyList:
-            data = data.get(item, defaultValue)
+            data = data.get(item)
             originData = originData.get(item)
             if originData == None:
                 if not passOnNotExists:
@@ -106,7 +121,10 @@ class Config:
                 else:
                     return defaultValue
             if data == None:
-                data = originData
+                if defaultValue == None:
+                    data = originData
+                else:
+                    return defaultValue
         
         return data
     
@@ -130,6 +148,24 @@ class Config:
             return True
         except Exception as e:
             raise ConfigException(f"Error with saving config.\n{e}")
+
+    def update(self) -> bool:
+        currentVersion = self.originData.get("Update").get("version")
+        if self.get("Update.version", currentVersion-1) < currentVersion and self.originData.get("Update").get("forceUpdate"):
+                self.data = self.originData
+                self.save()
+                return True
+        return False
+
+    def autoComplete(self) -> None:
+        for key in self.originData:
+            if key not in self.data:
+                self.data[key] = self.originData[key]
+            elif type(self.originData[key]) == dict:
+                for subKey in self.originData[key]:
+                    if subKey not in self.data[key]:
+                        self.data[key][subKey] = self.originData[key][subKey]
+        self.save()
 
     def __del__(self):
         # self.save()

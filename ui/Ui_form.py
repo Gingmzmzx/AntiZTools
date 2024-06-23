@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'e:\Projects\AntiZTools\ui\form.ui'
+# Form implementation generated from reading ui file 'f:\Projects\AntiZTools\ui\form.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -121,6 +121,9 @@ class Ui_Form(object):
         self.reCfgBtn = QtWidgets.QPushButton(self.tab)
         self.reCfgBtn.setGeometry(QtCore.QRect(180, 289, 75, 23))
         self.reCfgBtn.setObjectName("reCfgBtn")
+        self.acCfgBtn = QtWidgets.QPushButton(self.tab)
+        self.acCfgBtn.setGeometry(QtCore.QRect(92, 289, 75, 23))
+        self.acCfgBtn.setObjectName("acCfgBtn")
         self.tabWidget.addTab(self.tab, "")
         self.tab_about = QtWidgets.QWidget()
         self.tab_about.setObjectName("tab_about")
@@ -196,6 +199,7 @@ class Ui_Form(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_log), _translate("Form", "日志"))
         self.saveCfgBtn.setText(_translate("Form", "保存"))
         self.reCfgBtn.setText(_translate("Form", "重置"))
+        self.acCfgBtn.setText(_translate("Form", "补全"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "配置"))
         self.label.setText(_translate("Form", "AntiZTools: 反Z神器"))
         self.label_2.setText(_translate("Form", "AntiZTools，由Xzy开发，已在GitHub开源"))

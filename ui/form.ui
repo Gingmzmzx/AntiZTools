@@ -425,6 +425,19 @@
       <string>重置</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="acCfgBtn">
+     <property name="geometry">
+      <rect>
+       <x>92</x>
+       <y>289</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>补全</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_about">
     <attribute name="title">

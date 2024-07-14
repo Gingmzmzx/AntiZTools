@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_NotifyForm(object):
     def setupUi(self, NotifyForm):
         NotifyForm.setObjectName("NotifyForm")
-        NotifyForm.resize(200, 300)
+        NotifyForm.resize(200, 100)
         NotifyForm.setStyleSheet("QWidget#widgetTitle {\n"
                                  "    border-top-left-radius: 5px;\n"
                                  "    border-top-right-radius: 5px;\n"
@@ -35,6 +35,7 @@ class Ui_NotifyForm(object):
                                  "QPushButton#buttonClose {\n"
                                  "    font-family: \"webdings\";\n"
                                  "    color: rgb(255, 255, 255);\n"
+                                 "    border-top-right-radius: 5px;\n"
                                  "}\n"
                                  "QPushButton#buttonClose:hover {\n"
                                  "    background-color: rgb(212, 64, 39);\n"
@@ -51,16 +52,17 @@ class Ui_NotifyForm(object):
         )
         self.verticalLayout = QtWidgets.QVBoxLayout(NotifyForm)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout.setSpacing(6)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.widgetTitle = QtWidgets.QWidget(NotifyForm)
-        self.widgetTitle.setMinimumSize(QtCore.QSize(0, 26))
+        self.widgetTitle.setMinimumSize(QtCore.QSize(0, 19))
         self.widgetTitle.setObjectName("widgetTitle")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.widgetTitle)
         self.horizontalLayout_3.setContentsMargins(10, 0, 0, 0)
         self.horizontalLayout_3.setSpacing(0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.labelTitle = QtWidgets.QLabel(self.widgetTitle)
+        self.labelTitle.setFont(QtGui.QFont(None, 7))
         self.labelTitle.setText("")
         self.labelTitle.setObjectName("labelTitle")
         self.horizontalLayout_3.addWidget(self.labelTitle)
@@ -68,11 +70,23 @@ class Ui_NotifyForm(object):
                                            QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem)
         self.buttonClose = QtWidgets.QPushButton(self.widgetTitle)
-        self.buttonClose.setMinimumSize(QtCore.QSize(26, 26))
+        self.buttonClose.setMinimumSize(QtCore.QSize(19, 19))
         self.buttonClose.setMaximumSize(QtCore.QSize(26, 26))
         self.buttonClose.setObjectName("buttonClose")
         self.horizontalLayout_3.addWidget(self.buttonClose)
         self.verticalLayout.addWidget(self.widgetTitle)
+        self.labelBanner = QtWidgets.QLabel(NotifyForm)
+        self.labelBanner.setText("")
+        self.labelBanner.setObjectName("labelBanner")
+        self.labelBanner.setVisible(False)
+        self.verticalLayout.addWidget(self.labelBanner)
+        self.labelConTitle = QtWidgets.QLabel(NotifyForm)
+        self.labelConTitle.setText("")
+        self.labelConTitle.setMargin(6)
+        self.labelConTitle.setFont(QtGui.QFont(None, 13))
+        self.labelConTitle.setWordWrap(True)
+        self.labelConTitle.setObjectName("labelConTitle")
+        self.verticalLayout.addWidget(self.labelConTitle)
         self.labelContent = QtWidgets.QLabel(NotifyForm)
         self.labelContent.setText("")
         self.labelContent.setWordWrap(True)
@@ -88,7 +102,7 @@ class Ui_NotifyForm(object):
                                             QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.buttonView = QtWidgets.QPushButton(self.widgetBottom)
-        self.buttonView.setMinimumSize(QtCore.QSize(75, 25))
+        self.buttonView.setMinimumSize(QtCore.QSize(70, 20))
         self.buttonView.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.buttonView.setObjectName("buttonView")
         self.horizontalLayout.addWidget(self.buttonView)

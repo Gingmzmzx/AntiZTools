@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-import base64
+import base64, path
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QRectF, QSize, pyqtSignal, QTimer, QPropertyAnimation, QPoint
@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout,\
     QGridLayout, QSpacerItem, QSizePolicy, QGraphicsDropShadowEffect,\
     QListWidget, QListWidgetItem, QPushButton
 from ui.Ui_notify import Ui_NotifyForm
-
 
 class NotificationIcon:
 
@@ -232,10 +231,15 @@ class WindowNotify(QWidget, Ui_NotifyForm):
 
     SignalClosed = pyqtSignal()  # 弹窗关闭信号
 
-    def __init__(self, app, title="", content="", closeCallback=None, viewCallback=None, timeout=5000, *args, **kwargs):
+    def __init__(self, app, title="", conTitle="", content="", banner:QImage=None, closeCallback=None, viewCallback=None, timeout=5000, *args, **kwargs):
         super(WindowNotify, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.setTitle(title).setContent(content)
+        self.setTitle(title).setContent(content).setConTitle(conTitle)
+        if banner:
+            banner = banner.scaled(self.width(), int((self.width()/banner.width())*banner.height()), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+            self.labelBanner.setPixmap(QPixmap.fromImage(banner))
+            self.labelBanner.setVisible(True)
+            self.resize(self.width(), self.height()+banner.height()+self.labelContent.height())
         self._timeout = timeout
         self.closeCallback = closeCallback
         self.viewCallback = viewCallback
@@ -248,6 +252,14 @@ class WindowNotify(QWidget, Ui_NotifyForm):
 
     def title(self):
         return self.labelTitle.text()
+    
+    def setConTitle(self, title):
+        if title:
+            self.labelConTitle.setText(title)
+        return self
+
+    def conTitle(self):
+        return self.labelConTitle.text()
 
     def setContent(self, content):
         if content:

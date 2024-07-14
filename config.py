@@ -13,7 +13,13 @@ class Config:
             "EXEFileName": "AntiZTools.exe",
             "Password": "ZBZ666",
             "RegAppName": "AntiZTools",
-            "CheckUrl": "https://example.com"
+            "CheckUrl": "https://example.com",
+            "FontFamily": "幼圆",
+            "FontPointSize": 10
+        },
+        "News": {
+            "NewsApi": "https://azt.xzynb.top/news/news.json",
+            "Enable": True,
         },
         "TempFileClear": {
             "CleanFailedTimes": 2,
@@ -81,7 +87,10 @@ class Config:
                     "title": "账号登录",
                     "enable": False,
                     "fuzzyMatching": False,
-                    "handler": "keyboardListener"
+                    "handler": "keyboardListener",
+                    "data": {
+                        "fileName": "input_analysis.log"
+                    }
                 },{
                     "title": "火绒",
                     "enable": True,

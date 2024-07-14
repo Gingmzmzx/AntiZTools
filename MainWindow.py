@@ -1,15 +1,15 @@
 import requests, traceback, sys, path, random, time, json, reg, os, shutil, tempfile, ctypes
 from PyQt5 import QtCore
 from PyQt5 import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow
-from PyQt5.QtCore import QThread, pyqtSignal, QTimer
+from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtWidgets import QApplication, QFrame, QMessageBox, QLabel, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow, QVBoxLayout, QWidget, QGraphicsDropShadowEffect, QPushButton, QGridLayout, QSpacerItem, QSizePolicy
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer, QSize
 from ui.Ui_form import Ui_Form
-from ui.Ui_ZBDialog import Ui_ZBDialog
 from ui.Ui_debugForm import Ui_debugForm
 from ui.Ui_password import Ui_PasswordDialog
 from ui.Ui_aowForm import Ui_aowForm
 from aow import Aow1, Aow2, Aow3
+from notify import NotificationWindow, WindowNotify
 from config import Config
 from pynput import keyboard, mouse
 import pygetwindow as gw
@@ -28,12 +28,51 @@ def checkNetwork(url="https://example.com"):
         print(e)
     return True
 
-class ZBDialog(QDialog, Ui_ZBDialog):
-    def __init__(self, labelText, parent=None):
-        super(ZBDialog, self).__init__(parent)
-        self.setupUi(self)
-        self.setWindowIcon(QIcon(path.path("icon.jpg")))
-        self.label.setText(labelText)
+class ZBDialog(QDialog):
+    def __init__(self, labelText, *args, **kwargs):
+        super(ZBDialog, self).__init__(*args, **kwargs)
+        self.setObjectName('Custom_Dialog')
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
+        self.setStyleSheet("""
+#Custom_Widget {
+    background: white;
+    border-radius: 10px;
+}
+
+#closeButton {
+    min-width: 36px;
+    min-height: 36px;
+    font-family: "Webdings";
+    qproperty-text: "r";
+    border-radius: 10px;
+}
+#closeButton:hover {
+    color: white;
+    background: red;
+}
+""")
+        self.initUi()
+        # 添加阴影
+        effect = QGraphicsDropShadowEffect(self)
+        effect.setBlurRadius(12)
+        effect.setOffset(0, 0)
+        effect.setColor(QtCore.Qt.gray)
+        self.setGraphicsEffect(effect)
+
+        self.resize(403, 146)
+        self.label = QLabel(labelText, self)
+        self.label.setGeometry(QtCore.QRect(30, 20, 340, 100))
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(3)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        font = QFont()
+        font.setPointSize(25)
+        self.label.setFont(font)
+        self.label.setFrameShape(QFrame.NoFrame)
+        self.label.setWordWrap(True)
 
         r = random.randint(0, 255)
         g = random.randint(0, 255)
@@ -42,9 +81,27 @@ class ZBDialog(QDialog, Ui_ZBDialog):
 
         self.adjustSize()
         self.setFixedSize(self.width(), self.height())
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.activateWindow()
         self.setFocus()
+
+    def initUi(self):
+        layout = QVBoxLayout(self)
+        # 重点： 这个widget作为背景和圆角
+        self.widget = QWidget(self)
+        self.widget.setObjectName('Custom_Widget')
+        layout.addWidget(self.widget)
+
+        # 在widget中添加ui
+        layout = QGridLayout(self.widget)
+        layout.addItem(QSpacerItem(
+            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum), 0, 0)
+        layout.addWidget(QPushButton(
+            'r', self, clicked=self.accept, objectName='closeButton'), 0, 1)
+        layout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum,
+                                   QSizePolicy.Expanding), 1, 0)
+
+    def sizeHint(self):
+        return QSize(403, 146)
 
 class PasswordDialog(QDialog, Ui_PasswordDialog):
     def __init__(self, func, parent=None):
@@ -209,6 +266,8 @@ class MyMainWindow(QMainWindow, Ui_Form):
         if config.get("Tray.StartMsg") != "":
             self.log("<i>Show Tray Message.</i>")
             self.showMessage(config.get("Tray.StartMsg"))
+
+        WindowNotify(app, f"{config.get('Tray.ToolTip')}每日资讯", "Contents Here", parent=self).show().showAnimation()
     
     def openAowDialog(self):
         self.aowForm = AowForm(self.desktop.width(), self.desktop.height())
@@ -312,6 +371,18 @@ class MyMainWindow(QMainWindow, Ui_Form):
             getattr(self, func)(*args)
         except Exception as e:
             self.log(str(e))
+    
+    def notifySuccess(self, title, msg):
+        NotificationWindow.success(app, title, msg)
+    
+    def notifyError(self, title, msg):
+        NotificationWindow.error(app, title, msg)
+
+    def notifyInfo(self, title, msg):
+        NotificationWindow.info(app, title, msg)
+    
+    def notifyWarning(self, title, msg):
+        NotificationWindow.warning(app, title, msg)
 
     def openPwdDialog(self, func):
         def _openPwdDialog():
@@ -385,7 +456,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
     
     def openZBDialog(self, msg, w, h):
         zbDialog = ZBDialog(msg)
-        zbDialog.label.adjustSize()
+        # zbDialog.label.adjustSize()
         zbDialog.move(random.randint(0, w - zbDialog.width()), random.randint(0, h - zbDialog.height()))
         zbDialog.exec_()
 
@@ -566,6 +637,8 @@ class GetWindowThread(QThread):
                                 self.logger.emit("Stopped ZBDialog Listener.")
                                 self.openZBDialog(i.get("data", {}))
                                 self.execer.emit("changeTrayIcon", (path.path("icon.jpg"),))
+                                if i.get("data", {}).get("notify", False):
+                                    self.execer.emit("notifySuccess", ("检测到装逼", "已自动打开装逼窗口",))
                                 self.ZBDialogFlag = True
                         elif i.get("handler") == "keyboardListener":
                             if not self.PasswordFlag:
@@ -578,8 +651,10 @@ class GetWindowThread(QThread):
                                 window.close()
                                 self.logger.emit("Closed Window: " + title)
                                 msg = i.get("data", {}).get("msg", "已自动关闭不良界面")
-                                if msg:
+                                if msg and not i.get("data", {}).get("notify", False):
                                     self.execer.emit("showMessage", (msg,))
+                                elif msg and i.get("data", {}).get("notify", False):
+                                    self.execer.emit("notifySuccess", ("检测到不良界面", msg,))
                 if not matchFlag:
                     if self.PasswordFlag:
                         self.PasswordFlag = False
@@ -587,7 +662,7 @@ class GetWindowThread(QThread):
                         self.execer.emit("stopKeyBoardThread", ())
                         self.logger.emit("Stopped KeyBoard Listener.")
             except Exception as e:
-                self.logger.emit(e)
+                self.logger.emit(str(e))
             time.sleep(int(config.get("WindowTitle.Interval")))
         self.stopThread.emit()
         self.debugFormStatus = False
@@ -620,7 +695,6 @@ class RunCodeThread(QThread):
             exec(self.code)
         except Exception as e:
             self.logger.emit(str(e))
-
 
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QApplication(sys.argv)

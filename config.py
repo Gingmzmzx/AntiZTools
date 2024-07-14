@@ -5,7 +5,7 @@ class ConfigException(Exception): pass;
 class Config:
     originData = {
         "Update":{
-            "version": 114,
+            "version": 115,
             "forceUpdate": True
         },
         "Config": {
@@ -19,6 +19,16 @@ class Config:
             "CleanFailedTimes": 2,
             "TempFilePrefix": "_MEI"
         },
+        "Notification": {
+            "Messager": {
+                "MaxWidth": 300,
+                "MinWidth": 300
+            },
+            "NotifyWindow": {
+                "Height": 300,
+                "Width": 200
+            }
+        },
         "WindowTitle": {
             "Enable": True,
             "Interval": 1,
@@ -30,7 +40,8 @@ class Config:
                     "handler": "ZBDialog",
                     "data": {
                         "msg": ["检测到有人在装逼，我不说是谁", "震惊，六班竟然突破了科技封锁", "原神哥真的是太有实力啦"],
-                        "times": 5
+                        "times": 5,
+                        "notify": True
                     }
                 },
                 {
@@ -40,7 +51,8 @@ class Config:
                     "handler": "ZBDialog",
                     "data": {
                         "msg": ["别装了..."],
-                        "times": 1
+                        "times": 1,
+                        "notify": True
                     }
                 },
                 {
@@ -50,7 +62,8 @@ class Config:
                     "handler": "ZBDialog",
                     "data": {
                         "msg": ["别装了..."],
-                        "times": 1
+                        "times": 1,
+                        "notify": True
                     }
                 },
                 {
@@ -60,7 +73,8 @@ class Config:
                     "handler": "ZBDialog",
                     "data": {
                         "msg": ["别装了..."],
-                        "times": 1
+                        "times": 1,
+                        "notify": True
                     }
                 },
                 {
@@ -74,7 +88,8 @@ class Config:
                     "fuzzyMatching": True,
                     "handler": "closeWindow",
                     "data": {
-                        "msg": "已自动关闭不良界面"
+                        "msg": "已自动关闭不良界面",
+                        "notify": True
                     }
                 }
             ]

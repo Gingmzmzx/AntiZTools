@@ -17,7 +17,8 @@ class Config:
             "RegAppName": "AntiZTools",
             "CheckUrl": "https://example.com",
             "FontFamily": "幼圆",
-            "FontPointSize": 10
+            "FontPointSize": 10,
+            "DESKey": "ZBZ666",
         },
         "News": {
             "NewsApi": "https://azt.xzynb.top/news/news.json",

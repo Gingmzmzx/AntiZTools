@@ -9,7 +9,6 @@ lazy-object-proxy==1.4.3
 MarkupSafe==2.1.5
 mccabe==0.6.1
 psutil==5.9.8
-pylint==2.6.0
 PyQt5==5.15.10
 PyQt5-Qt5==5.15.2
 PyQt5-sip==12.13.0

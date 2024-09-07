@@ -1,4 +1,6 @@
 import pathlib, os
+
+
 def makeSurePathExists(pathToFile):
     pathlib.Path(os.path.join(pathlib.Path().home(), ".AntiZTools", pathToFile)).mkdir(parents=True, exist_ok=True)
 

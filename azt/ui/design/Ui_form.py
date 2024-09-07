@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'f:\Projects\AntiZTools\ui\form.ui'
+# Form implementation generated from reading ui file 'e:\Projects\AntiZTools\azt\ui\design\form.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -125,6 +125,23 @@ class Ui_Form(object):
         self.acCfgBtn.setGeometry(QtCore.QRect(92, 289, 75, 23))
         self.acCfgBtn.setObjectName("acCfgBtn")
         self.tabWidget.addTab(self.tab, "")
+        self.tab_view = QtWidgets.QWidget()
+        self.tab_view.setObjectName("tab_view")
+        self.filepathInput = QtWidgets.QLineEdit(self.tab_view)
+        self.filepathInput.setGeometry(QtCore.QRect(7, 6, 266, 20))
+        self.filepathInput.setObjectName("filepathInput")
+        self.reFileBtn = QtWidgets.QPushButton(self.tab_view)
+        self.reFileBtn.setGeometry(QtCore.QRect(282, 5, 75, 23))
+        self.reFileBtn.setObjectName("reFileBtn")
+        self.viewFileTextarea = QtWidgets.QTextBrowser(self.tab_view)
+        self.viewFileTextarea.setGeometry(QtCore.QRect(6, 34, 359, 250))
+        self.viewFileTextarea.setReadOnly(False)
+        self.viewFileTextarea.setPlaceholderText("")
+        self.viewFileTextarea.setObjectName("viewFileTextarea")
+        self.saveFileBtn = QtWidgets.QPushButton(self.tab_view)
+        self.saveFileBtn.setGeometry(QtCore.QRect(290, 290, 75, 23))
+        self.saveFileBtn.setObjectName("saveFileBtn")
+        self.tabWidget.addTab(self.tab_view, "")
         self.tab_about = QtWidgets.QWidget()
         self.tab_about.setObjectName("tab_about")
         self.label = QtWidgets.QLabel(self.tab_about)
@@ -201,6 +218,15 @@ class Ui_Form(object):
         self.reCfgBtn.setText(_translate("Form", "重置"))
         self.acCfgBtn.setText(_translate("Form", "补全"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "配置"))
+        self.filepathInput.setPlaceholderText(_translate("Form", "输入文件地址"))
+        self.reFileBtn.setText(_translate("Form", "加载"))
+        self.viewFileTextarea.setHtml(_translate("Form", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'微软雅黑\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
+        self.saveFileBtn.setText(_translate("Form", "保存"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_view), _translate("Form", "查看文件"))
         self.label.setText(_translate("Form", "AntiZTools: 反Z神器"))
         self.label_2.setText(_translate("Form", "AntiZTools，由Xzy开发，已在GitHub开源"))
         self.label_3.setText(_translate("Form", "起因："))

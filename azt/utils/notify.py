@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
-import base64, path
+import base64
+
+from ..utils import path
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QRectF, QSize, pyqtSignal, QTimer, QPropertyAnimation, QPoint
@@ -11,7 +13,7 @@ from PyQt5.QtGui import QPixmap, QImage, QPainter, QPainterPath,\
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout,\
     QGridLayout, QSpacerItem, QSizePolicy, QGraphicsDropShadowEffect,\
     QListWidget, QListWidgetItem, QPushButton
-from ui.Ui_notify import Ui_NotifyForm
+from ..ui.design.Ui_notify import Ui_NotifyForm
 
 class NotificationIcon:
 

@@ -1,11 +1,13 @@
-import os, path, json
+import os, json
+from . import path
 
-class ConfigException(Exception): pass;
+
+class ConfigException(Exception): pass
 
 class Config:
     originData = {
         "Update":{
-            "version": 115,
+            "version": 116,
             "forceUpdate": True
         },
         "Config": {
@@ -47,7 +49,7 @@ class Config:
                     "data": {
                         "msg": ["检测到有人在装逼，我不说是谁", "震惊，六班竟然突破了科技封锁", "原神哥真的是太有实力啦"],
                         "times": 5,
-                        "notify": True
+                        "notify": False
                     }
                 },
                 {
@@ -58,7 +60,7 @@ class Config:
                     "data": {
                         "msg": ["别装了..."],
                         "times": 1,
-                        "notify": True
+                        "notify": False
                     }
                 },
                 {
@@ -69,7 +71,7 @@ class Config:
                     "data": {
                         "msg": ["别装了..."],
                         "times": 1,
-                        "notify": True
+                        "notify": False
                     }
                 },
                 {
@@ -80,7 +82,7 @@ class Config:
                     "data": {
                         "msg": ["别装了..."],
                         "times": 1,
-                        "notify": True
+                        "notify": False
                     }
                 },
                 {

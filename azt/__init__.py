@@ -1,6 +1,7 @@
 import os
 from azt.utils.config import Config
 from azt.utils import path
+from azt.utils.crypt import DESCrypt
 
 path.makeSurePathExists("")
 
@@ -16,6 +17,9 @@ if not os.path.exists(path.path("icon_colored.png")):
 
 config = Config()
 config.update()
+
+key: str = config.get("Config.DESKey")
+desCrypt = DESCrypt(key)
 
 import sys
 from PyQt5 import QtCore

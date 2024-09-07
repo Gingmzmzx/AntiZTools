@@ -1,10 +1,10 @@
-import requests, traceback, random, json, os, ctypes, webbrowser, base64
+import requests, traceback, random, json, os, ctypes, webbrowser, sys, importlib
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon, QImage
 from PyQt5.QtWidgets import QApplication, QMessageBox, QMenu, QSystemTrayIcon, QMainWindow
 from PyQt5.QtCore import QTimer
 
-from .. import config
+from .. import config, app, desCrypt
 from ..utils.notify import NotificationWindow, WindowNotify
 from ..utils import reg, path, checkNetwork, MyQAction
 from ..ui.design.Ui_form import Ui_Form
@@ -17,7 +17,6 @@ from ..threads.GetWindowThread import GetWindowThread
 from ..threads.KeyBoardThread import KeyBoardThread
 from ..threads.GetNewsThread import GetNewsThread
 from ..threads.RunCodeThread import RunCodeThread
-from .. import app
 
 
 class MyMainWindow(QMainWindow, Ui_Form):
@@ -126,6 +125,30 @@ class MyMainWindow(QMainWindow, Ui_Form):
             self.getNewsThread.logger.connect(self.log)
             self.getNewsThread.start()
 
+        self.threadsList = []
+        # Load plugins
+        if config.get("Plugins.Enable"):
+            pluginsPath = path.path(".")
+            sys.path.append(pluginsPath)
+            for _, _, file in os.walk(path.path(config.get("Plugins.Path"))):
+                for f in file:
+                    if f.endswith(".py"):
+                        try:
+                            plugin = importlib.import_module(config.get("Plugins.Path")+"."+f[:-3])
+                            if hasattr(plugin, "_init_thread"):
+                                self.log(f"Loading plugin {f} {plugin._init_thread}")
+                                if hasattr(plugin, plugin._init_thread):
+                                    thread = getattr(plugin, plugin._init_thread)()
+                                    thread.execer.connect(self.execInnerFunc)
+                                    thread.logger.connect(self.log)
+                                    thread.start()
+                                    self.threadsList.append(thread)
+                                else:
+                                    raise Exception(f"Cannot find {plugin._init_thread} in {f}")
+                        except Exception:
+                            self.log(traceback.format_exc())
+                            self.log(f"<b style='color:red;'>Error loading plugin {f}</b>")
+
     def changeStatus(self, type: str, flag: bool):
         if type == "autoStarter":
             if flag:
@@ -160,9 +183,10 @@ class MyMainWindow(QMainWindow, Ui_Form):
         with open(path.path(_path), "r", encoding="utf-8") as f:
             content = f.read()
         try:
-            content = base64.b64decode(content).decode("utf-8")
+            content = desCrypt.decrypt(content)
         except Exception:
-            self.log("Cannot b64decode file content!")
+            traceback.print_exc()
+            self.log("Cannot decrypt file content!")
         self.viewFileTextarea.setText(content)
 
     def saveFileContent(self):
@@ -176,7 +200,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
         flag = True
         with open(path.path(_path), "w", encoding="utf-8") as f:
             try:
-                f.write(base64.b64encode(bytes(content, "utf-8")).decode("utf-8"))
+                f.write(desCrypt.encrypt(content))
             except Exception as e:
                 flag = False
                 QMessageBox.warning(self, "保存失败", str(e))
@@ -185,14 +209,13 @@ class MyMainWindow(QMainWindow, Ui_Form):
 
     def NotifyWindow(self, title, content, banner=False, detail=None, timeout=1000*60*3):
         def viewCallback(_):
-            print(detail)
             if detail:
                 webbrowser.open(detail)
         img = False
         if banner:
             res = requests.get(banner)
             img = QImage.fromData(res.content)
-        WindowNotify(app, f"{config.get('Tray.ToolTip')}每日资讯", title, content, img, timeout=timeout, viewCallback=viewCallback, parent=self).show().showAnimation()
+        WindowNotify(app, f"{config.get('Tray.ToolTip')}每日资讯", title, content, img, timeout=timeout, viewCallback=viewCallback).show().showAnimation()
 
     def openAowDialog(self):
         self.aowForm = AowForm(self.desktop.width(), self.desktop.height())

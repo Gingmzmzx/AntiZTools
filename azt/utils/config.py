@@ -18,11 +18,16 @@ class Config:
             "CheckUrl": "https://example.com",
             "FontFamily": "幼圆",
             "FontPointSize": 10,
-            "DESKey": "ZBZ666",
+            "DESKey": "cc757e12a8d15d65",
+        },
+        "Plugins": {
+            "Enable": True,
+            "Path": "plugins",
+            "Disable": []
         },
         "News": {
             "NewsApi": "https://azt.xzynb.top/news/news.json",
-            "Enable": True,
+            "Enable": False,
         },
         "TempFileClear": {
             "CleanFailedTimes": 2,

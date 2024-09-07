@@ -22,7 +22,7 @@ class DESCrypt:
 
     def encrypt(self, plain_text: str):
         iv = self.cipher.iv
-        padded_text = pad(plain_text.encode(), DES.block_size)  # 填充
+        padded_text = pad(plain_text.encode("utf-8"), DES.block_size)  # 填充
         encrypted_text = self.cipher.encrypt(padded_text)
         ret = iv + encrypted_text  # 将IV与密文结合
         return ret.hex()  # 返回十六进制的形式
@@ -35,7 +35,7 @@ class DESCrypt:
         iv = encrypted_text[:DES.block_size]  # 提取IV
         cipher = DES.new(self.key, DES.MODE_CBC, iv)  # 使用相同的IV初始化
         decrypted_padded_text = cipher.decrypt(encrypted_text[DES.block_size:])  # 解密
-        return unpad(decrypted_padded_text, DES.block_size).decode()  # 去除填充并返回明文
+        return unpad(decrypted_padded_text, DES.block_size).decode("utf-8", errors='replace')  # 去除填充并返回明文
     
 
 

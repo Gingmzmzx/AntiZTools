@@ -31,5 +31,6 @@ QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 app = QApplication(sys.argv)
 # setup stylesheet
 # qt_material.apply_stylesheet(app, theme='dark_teal.xml')
-QApplication.setFont(QFont(config.get("Config.FontFamily"), int(config.get("Config.FontPointSize"))))
+if config.get("Fonts.Enable"):
+    QApplication.setFont(QFont(config.get("Fonts.FontFamily"), int(config.get("Fonts.FontPointSize"))))
 QApplication.setQuitOnLastWindowClosed(False)

@@ -16,9 +16,12 @@ class Config:
             "Password": "ZBZ666",
             "RegAppName": "AntiZTools",
             "CheckUrl": "https://example.com",
-            "FontFamily": "幼圆",
-            "FontPointSize": 10,
             "DESKey": "cc757e12a8d15d65",
+        },
+        "Fonts": {
+            "Enable": False,
+            "FontFamily": "幼圆",
+            "FontPointSize": 10
         },
         "Plugins": {
             "Enable": True,

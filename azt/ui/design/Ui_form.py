@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'e:\Projects\AntiZTools\azt\ui\design\form.ui'
+# Form implementation generated from reading ui file 'f:\Projects\AntiZTools\azt\ui\design\form.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -116,14 +116,17 @@ class Ui_Form(object):
         self.CfgTextarea.setReadOnly(False)
         self.CfgTextarea.setObjectName("CfgTextarea")
         self.saveCfgBtn = QtWidgets.QPushButton(self.tab)
-        self.saveCfgBtn.setGeometry(QtCore.QRect(270, 289, 75, 23))
+        self.saveCfgBtn.setGeometry(QtCore.QRect(279, 289, 75, 23))
         self.saveCfgBtn.setObjectName("saveCfgBtn")
         self.reCfgBtn = QtWidgets.QPushButton(self.tab)
-        self.reCfgBtn.setGeometry(QtCore.QRect(180, 289, 75, 23))
+        self.reCfgBtn.setGeometry(QtCore.QRect(192, 289, 75, 23))
         self.reCfgBtn.setObjectName("reCfgBtn")
         self.acCfgBtn = QtWidgets.QPushButton(self.tab)
-        self.acCfgBtn.setGeometry(QtCore.QRect(92, 289, 75, 23))
+        self.acCfgBtn.setGeometry(QtCore.QRect(104, 289, 75, 23))
         self.acCfgBtn.setObjectName("acCfgBtn")
+        self.genDESKeyBtn = QtWidgets.QPushButton(self.tab)
+        self.genDESKeyBtn.setGeometry(QtCore.QRect(19, 290, 75, 23))
+        self.genDESKeyBtn.setObjectName("genDESKeyBtn")
         self.tabWidget.addTab(self.tab, "")
         self.tab_view = QtWidgets.QWidget()
         self.tab_view.setObjectName("tab_view")
@@ -217,6 +220,7 @@ class Ui_Form(object):
         self.saveCfgBtn.setText(_translate("Form", "保存"))
         self.reCfgBtn.setText(_translate("Form", "重置"))
         self.acCfgBtn.setText(_translate("Form", "补全"))
+        self.genDESKeyBtn.setText(_translate("Form", "生成DESKey"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "配置"))
         self.filepathInput.setPlaceholderText(_translate("Form", "输入文件地址"))
         self.reFileBtn.setText(_translate("Form", "加载"))

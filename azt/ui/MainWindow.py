@@ -48,7 +48,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.trayIconMenu.addActions((self.openAction, self.exitAction))
         self.openAction.triggered.connect(self.openPwdDialog(self.show))
         self.exitAction.triggered.connect(self.openPwdDialog(app.quit))
-        self.aowAction.triggered.connect(self.openAowDialog)
+        self.aowAction.triggered.connect(self.openPwdDialog(self.openAowDialog))
         self.winTitleAction.changeText("未运行")
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
@@ -95,6 +95,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.saveCfgBtn.clicked.connect(self.saveCfg)
         self.reCfgBtn.clicked.connect(self.resetCfg)
         self.acCfgBtn.clicked.connect(self.acCfg)
+        self.genDESKeyBtn.clicked.connect(self.generateDESKey)
 
         self.reFileBtn.clicked.connect(self.loadFileContent)
         self.saveFileBtn.clicked.connect(self.saveFileContent)
@@ -206,6 +207,15 @@ class MyMainWindow(QMainWindow, Ui_Form):
                 QMessageBox.warning(self, "保存失败", str(e))
         if flag:
             QMessageBox.information(self, "保存成功", "保存成功！")
+
+    def generateDESKey(self):
+        result = QMessageBox.warning(self, "确定？", "更改DESKey会造成之前使用原先DESKey加密的文件无法解密，并且更改之后需要重启本程序才能生效新的DESKey。", QMessageBox.Cancel | QMessageBox.Ok, QMessageBox.Ok)
+        if result == QMessageBox.Ok:
+            key = desCrypt.generate_key()
+            config.set("Config.DESKey", key.hex())
+            config.save()
+            self.resetCfg()
+            QMessageBox.information(self, "生成成功", f"新的DESKey为：{key.hex()}")
 
     def NotifyWindow(self, title, content, banner=False, detail=None, timeout=1000*60*3):
         def viewCallback(_):

@@ -30,6 +30,7 @@ pip install -r requirements.txt
 # 生成资源文件
 cd azt
 python tools/res_gen.py
+cd ..
 
 # 构建
 vim build.spec # 修改`pathx`以及exe图标路径

@@ -19,7 +19,19 @@
 - 其他特性尽请体验
 
 ## 3. 构建
-- 安装依赖`pip install -r requirements.txt`
-- 编辑`main.spec`，将`E:\Projects\AntiZTools`换为您的项目地址
-- 运行`python res_gen.py`生成`data.py`资源文件（确保`icon.jpg`和`icon_colored.png`在同级目录下）
-- 运行`pyinstaller main.spec`构建
+```shell
+# 克隆项目
+git clone https://github.com/Gingmzmzx/AntiZTools/
+cd AntiZTools
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 生成资源文件
+cd azt
+python tools/res_gen.py
+
+# 构建
+vim build.spec # 修改`pathx`以及exe图标路径
+pyinstaller build.spec
+```

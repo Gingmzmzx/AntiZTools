@@ -1,7 +1,6 @@
 .vscode/
 __pycache__
 config.json
-main.spec
 build/
 dist/
 releases/

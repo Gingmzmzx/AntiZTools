@@ -39,7 +39,6 @@ class DESCrypt:
     
 
 
-# 示例
 if __name__ == "__main__":
     descrypt = DESCrypt()
     print(f"Key: {descrypt.key.hex()}")

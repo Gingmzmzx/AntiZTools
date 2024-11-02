@@ -32,7 +32,7 @@ class GetWindowThread(QThread):
             self.logger.emit("Started ZBDialog Listener.")
         
         # debug
-        self.ZBDialogFlag = False
+        # self.ZBDialogFlag = False
 
         _oldTitle = None
         while True:

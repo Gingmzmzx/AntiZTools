@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帮助页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        h2 {
+            color: #2196F3;
+        }
+        p {
+            margin: 10px 0;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<h1>软件配置帮助页面</h1>
+<p>本页面提供对软件配置文件各项设置的解释和指导。</p>
+
+<h2>1. 更新设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>version</td>
+        <td>整数</td>
+        <td>114</td>
+        <td>软件的当前版本号。</td>
+    </tr>
+    <tr>
+        <td>forceUpdate</td>
+        <td>布尔</td>
+        <td>True</td>
+        <td>当配置版本过低时，是否强制更新配置为新版的默认配置。</td>
+    </tr>
+</table>
+
+<h2>2. 配置设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>StartShow</td>
+        <td>布尔</td>
+        <td>False</td>
+        <td>启动时是否显示主界面。</td>
+    </tr>
+    <tr>
+        <td>EXEFileName</td>
+        <td>字符串</td>
+        <td>AntiZTools.exe</td>
+        <td>主程序的执行文件名。</td>
+    </tr>
+    <tr>
+        <td>Password</td>
+        <td>字符串</td>
+        <td>ZBZ666</td>
+        <td>访问软件的密码。</td>
+    </tr>
+    <tr>
+        <td>RegAppName</td>
+        <td>字符串</td>
+        <td>AntiZTools</td>
+        <td>注册的应用程序名称。（通常用于开机自启注册表）</td>
+    </tr>
+    <tr>
+        <td>CheckUrl</td>
+        <td>字符串</td>
+        <td>https://example.com</td>
+        <td>检查网络连接的URL地址。</td>
+    </tr>
+    <tr>
+        <td>DESKey</td>
+        <td>字符串</td>
+        <td>cc757e12a8d15d65</td>
+        <td>DES的密钥。</td>
+    </tr>
+</table>
+
+<h2>3. 字体设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>Enable</td>
+        <td>布尔</td>
+        <td>False</td>
+        <td>是否启用自定义字体。</td>
+    </tr>
+    <tr>
+        <td>FontFamily</td>
+        <td>字符串</td>
+        <td>幼圆</td>
+        <td>字体名称。</td>
+    </tr>
+    <tr>
+        <td>FontPointSize</td>
+        <td>整数</td>
+        <td>10</td>
+        <td>字体大小。</td>
+    </tr>
+</table>
+
+<h2>4. 插件设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>Enable</td>
+        <td>布尔</td>
+        <td>True</td>
+        <td>是否启用插件功能。</td>
+    </tr>
+    <tr>
+        <td>Path</td>
+        <td>字符串</td>
+        <td>plugins</td>
+        <td>插件文件的路径。（<code>~/.AntiZTools/{Path}</code>）</td>
+    </tr>
+    <tr>
+        <td>Disable</td>
+        <td>数组</td>
+        <td>[]</td>
+        <td>禁用的插件列表。</td>
+    </tr>
+</table>
+
+<h2>5. 新闻设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>NewsApi</td>
+        <td>字符串</td>
+        <td>https://azt.xzynb.top/news/news.json</td>
+        <td>新闻源的 API 地址。</td>
+    </tr>
+    <tr>
+        <td>Enable</td>
+        <td>布尔</td>
+        <td>False</td>
+        <td>是否启用新闻功能。</td>
+    </tr>
+</table>
+
+<h2>6. 临时文件清理</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>CleanFailedTimes</td>
+        <td>整数</td>
+        <td>2</td>
+        <td>当失败文件数目大于此值时，会提示。</td>
+    </tr>
+    <tr>
+        <td>TempFilePrefix</td>
+        <td>字符串</td>
+        <td>_MEI</td>
+        <td>临时文件的前缀。</td>
+    </tr>
+</table>
+
+<h2>7. 通知设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>Messager</td>
+        <td>对象</td>
+        <td>{ "MaxWidth": 300, "MinWidth": 300 }</td>
+        <td>通知消息的宽度设置。</td>
+    </tr>
+    <tr>
+        <td>NotifyWindow</td>
+        <td>对象</td>
+        <td>{ "Height": 300, "Width": 200 }</td>
+        <td>通知窗口的高度和宽度。（新闻资讯弹窗属于NotifyWindow）</td>
+    </tr>
+</table>
+
+<h2>8. 窗口标题设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>Enable</td>
+        <td>布尔</td>
+        <td>True</td>
+        <td>是否启用窗口标题功能。</td>
+    </tr>
+    <tr>
+        <td>Interval</td>
+        <td>整数</td>
+        <td>1</td>
+        <td>处理间隔时间。</td>
+    </tr>
+    <tr>
+        <td>hook</td>
+        <td>数组</td>
+        <td>[]</td>
+        <td>窗口标题处理的具体规则，包括：
+            <ul>
+                <li><strong>title</strong>: 窗口的标题。</li>
+                <li><strong>enable</strong>: 是否启用该规则。</li>
+                <li><strong>fuzzyMatching</strong>: 是否启用模糊匹配。</li>
+                <li><strong>handler</strong>: 处理该窗口的操作。</li>
+                <li><strong>data</strong>: 处理数据，如消息内容和通知设置。</li>
+            </ul>
+        </td>
+    </tr>
+</table>
+
+<h2>9. 托盘设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>ToolTip</td>
+        <td>字符串</td>
+        <td>GeoGebra</td>
+        <td>托盘图标的提示信息。</td>
+    </tr>
+    <tr>
+        <td>StartMsg</td>
+        <td>字符串</td>
+        <td>已在后台运行</td>
+        <td>启动时的消息提示。</td>
+    </tr>
+</table>
+
+<h2>10. 屏幕保护程序设置</h2>
+<table>
+    <tr>
+        <th>字段</th>
+        <th>类型</th>
+        <th>默认值</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>StartScreenSaverTimer</td>
+        <td>整数</td>
+        <td>0</td>
+        <td>屏幕保护程序启动的定时器设置。</td>
+    </tr>
+    <tr>
+        <td>StartScreenSaverLastTime</td>
+        <td>整数</td>
+        <td>1800</td>
+        <td>屏幕保护程序的持续时间（秒）。</td>
+    </tr>
+    <tr>
+        <td>ScreenSaverCmd</td>
+        <td>字符串</td>
+        <td>D:\HiteVision\electron.exe D:\HiteVision</td>
+        <td>启动屏幕保护程序的命令。</td>
+    </tr>
+</table>
+
+<p>感谢您使用本软件！如有疑问，请联系支持团队。</p>
+
+</body>
+</html>

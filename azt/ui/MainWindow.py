@@ -11,6 +11,7 @@ from ..ui.design.Ui_form import Ui_Form
 from ..ui.DebugForm import DebugForm
 from ..ui.PasswordDialog import PasswordDialog
 from ..ui.ZBDialog import ZBDialog
+from ..ui.CfgHelpForm import CfgHelpForm
 from ..ui.AowForm import AowForm
 from ..threads.AutoStartThread import AutoStartThread
 from ..threads.GetWindowThread import GetWindowThread
@@ -96,6 +97,7 @@ class MyMainWindow(QMainWindow, Ui_Form):
         self.reCfgBtn.clicked.connect(self.resetCfg)
         self.acCfgBtn.clicked.connect(self.acCfg)
         self.genDESKeyBtn.clicked.connect(self.generateDESKey)
+        self.cfgHelpBtn.clicked.connect(self.cfgHelp)
 
         self.reFileBtn.clicked.connect(self.loadFileContent)
         self.saveFileBtn.clicked.connect(self.saveFileContent)
@@ -309,8 +311,14 @@ class MyMainWindow(QMainWindow, Ui_Form):
         子线程执行：在RunCodeThread中执行代码\n
         在主线程中，调用self.log(*args)来输出调试信息到日志框\n
         在子线程中，调用self.logger.emit(str)来输出调试信息到日志框\n
-        在子线程中，调用self.execer.emit(str, (args,))来执行主线程名为str的方法，并附带参数*(args,)
+        在子线程中，调用self.execer.emit(str, (args,))来执行主线程名为str的方法，并附带参数*(args,)\n
+        \n
+        使用 self.getWindowThread.ZBDialogFlag = False 来启用ZBDialog Listener
         """)
+
+    def cfgHelp(self):
+        self.cfgHelpForm = CfgHelpForm()
+        self.cfgHelpForm.show()
 
     def execCodeFunc(self):
         try:

@@ -5,3 +5,5 @@ build/
 dist/
 releases/
 test/
+azt/resources/res_list.py
+azt/resources/res_data.py

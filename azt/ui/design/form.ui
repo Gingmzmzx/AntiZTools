@@ -402,7 +402,7 @@
     <widget class="QPushButton" name="saveCfgBtn">
      <property name="geometry">
       <rect>
-       <x>279</x>
+       <x>286</x>
        <y>289</y>
        <width>75</width>
        <height>23</height>
@@ -415,7 +415,7 @@
     <widget class="QPushButton" name="reCfgBtn">
      <property name="geometry">
       <rect>
-       <x>192</x>
+       <x>206</x>
        <y>289</y>
        <width>75</width>
        <height>23</height>
@@ -428,7 +428,7 @@
     <widget class="QPushButton" name="acCfgBtn">
      <property name="geometry">
       <rect>
-       <x>104</x>
+       <x>90</x>
        <y>289</y>
        <width>75</width>
        <height>23</height>
@@ -441,7 +441,7 @@
     <widget class="QPushButton" name="genDESKeyBtn">
      <property name="geometry">
       <rect>
-       <x>19</x>
+       <x>10</x>
        <y>290</y>
        <width>75</width>
        <height>23</height>
@@ -449,6 +449,19 @@
      </property>
      <property name="text">
       <string>生成DESKey</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="cfgHelpBtn">
+     <property name="geometry">
+      <rect>
+       <x>169</x>
+       <y>289</y>
+       <width>33</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>?</string>
      </property>
     </widget>
    </widget>
@@ -558,7 +571,7 @@ p, li { white-space: pre-wrap; }
       </sizepolicy>
      </property>
      <property name="text">
-      <string>AntiZTools，由Xzy开发，已在GitHub开源</string>
+      <string>AntiZTools，由XzyStudio开发，已在GitHub开源</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_3">
@@ -591,17 +604,24 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>80</y>
+       <y>75</y>
        <width>260</width>
-       <height>12</height>
+       <height>20</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+      </font>
+     </property>
      <property name="styleSheet">
-      <string notr="true">color: blue;
-text-decoration: underline;</string>
+      <string notr="true"/>
      </property>
      <property name="text">
-      <string>https://xzynb.top/blog/装逼遭雷劈（4）/</string>
+      <string>&lt;a href=&quot;https://xzynb.top/blog/装逼遭雷劈（4）/&quot;&gt;https://xzynb.top/blog/装逼遭雷劈（4）/&lt;/a&gt;</string>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QLabel" name="label_6">
@@ -609,22 +629,24 @@ text-decoration: underline;</string>
       <rect>
        <x>80</x>
        <y>100</y>
-       <width>270</width>
+       <width>280</width>
        <height>20</height>
       </rect>
      </property>
      <property name="font">
       <font>
-       <family>SimSun-ExtB</family>
+       <family>Consolas</family>
        <underline>true</underline>
       </font>
      </property>
      <property name="styleSheet">
-      <string notr="true">color: blue;
-text-decoration: underline;</string>
+      <string notr="true"/>
      </property>
      <property name="text">
-      <string>https://github.com/Gingmzmzx/AntiZTools</string>
+      <string>&lt;a href=&quot;https://github.com/Gingmzmzx/AntiZTools&quot;&gt;https://github.com/Gingmzmzx/AntiZTools&lt;/a&gt;</string>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>
